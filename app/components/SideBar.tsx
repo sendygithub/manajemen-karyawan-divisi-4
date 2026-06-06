@@ -21,7 +21,7 @@ import {
 const menus = [
   {
     icon: LayoutDashboard,
-    href: "/dashboard",
+    href: "/dashboard/admin",
   },
   {
     icon: UserRound,

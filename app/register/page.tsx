@@ -1,7 +1,65 @@
+"use client";
+
 import Link from "next/link";
 import AuthInput from "@/components/AuthInput";
+const AnyAuthInput = AuthInput as any;
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      const response = await fetch("/api/register", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Register failed");
+
+        return;
+      }
+
+      alert("Register success!");
+
+      router.push("/login");
+    } catch (error) {
+      console.log(error);
+
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="min-h-screen bg-[#09090b] text-white">
       <div className="flex min-h-screen items-center justify-center p-6">
@@ -116,29 +174,100 @@ export default function RegisterPage() {
             </div>
 
             {/* FORM */}
-            <form className="space-y-5">
-              <AuthInput label="Full Name" placeholder="John Doe" />
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="John Doe"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="
+          w-full
+          rounded-xl
+          border
+          border-white/10
+          bg-white/5
+          px-4
+          py-3
+          text-white
+          outline-none
+          transition
+          focus:border-blue-500
+          focus:bg-white/10
+        "
+              />
 
-              <AuthInput
-                label="Email"
+              <input
+                className="
+          w-full
+          rounded-xl
+          border
+          border-white/10
+          bg-white/5
+          px-4
+          py-3
+          text-white
+          outline-none
+          transition
+          focus:border-blue-500
+          focus:bg-white/10
+        "
                 type="email"
                 placeholder="you@example.com"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
               />
 
-              <AuthInput
-                label="Password"
+              <input
+                className="
+          w-full
+          rounded-xl
+          border
+          border-white/10
+          bg-white/5
+          px-4
+          py-3
+          text-white
+          outline-none
+          transition
+          focus:border-blue-500
+          focus:bg-white/10
+        "
                 type="password"
                 placeholder="••••••••"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
               />
 
-              <AuthInput
-                label="Confirm Password"
+              <input
+                className="
+          w-full
+          rounded-xl
+          border
+          border-white/10
+          bg-white/5
+          px-4
+          py-3
+          text-white
+          outline-none
+          transition
+          focus:border-blue-500
+          focus:bg-white/10
+        "
                 type="password"
                 placeholder="••••••••"
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
               />
 
               {/* BUTTON */}
               <button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={loading}
                 className="
                   w-full
                   rounded-2xl

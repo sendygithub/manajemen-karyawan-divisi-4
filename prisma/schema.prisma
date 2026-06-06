@@ -4,34 +4,59 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  
+ 
 }
 
 datasource db {
   provider = "postgresql"
+  url = env("DATABASE_URL")
 }
 
 
 model User {
   id       String @id @default(cuid())
+  name     String
   email    String @unique
   password String
-  role     Role @default(USER)
-
+  role     Role @default(EMPLOYEE)
+  createdAt DateTime @default(now())
   employees Employee[]
 }
 
 model Employee {
-  id      String @id @default(cuid())
-  name    String
-  position String
+  id         String   @id @default(cuid())
 
-  userId String
-  user   User @relation(fields: [userId], references: [id])
+  name       String
+  email      String   @unique
+  position   String
+  // Relasi ke User
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+
+  // PERBAIKAN: Relasi ke Department
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  createdAt  DateTime @default(now())
+
 }
 
 enum Role {
   ADMIN
-  USER
+  EMPLOYEE
+}
+
+
+model Department {
+  id        String   @id @default(cuid())
+
+  name      String
+  jobdesk   String
+  plant     String
+
+  createdAt DateTime @default(now())
+  // Relasi ke Employee (1 Department bisa punya banyak Employee)
+  employees Employee[]
 }

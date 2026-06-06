@@ -13,6 +13,7 @@ export default function EmployeeTable({ employees }: Props) {
             <th className="p-4">Name</th>
             <th className="p-4">Email</th>
             <th className="p-4">Position</th>
+            <th className="p-4">Department</th>
           </tr>
         </thead>
 
@@ -24,6 +25,7 @@ export default function EmployeeTable({ employees }: Props) {
               <td className="p-4">{employee.email}</td>
 
               <td className="p-4">{employee.position}</td>
+              <td className="p-4">{employee.department}</td>
             </tr>
           ))}
         </tbody>

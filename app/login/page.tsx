@@ -1,6 +1,43 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      alert("Invalid credentials");
+
+      return;
+    }
+
+    const session = await getSession();
+
+    if (session?.user.role === "ADMIN") {
+      router.push("/dashboard/admin");
+    }
+
+    if (session?.user.role === "EMPLOYEE") {
+      router.push("/dashboard/employee");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#09090b] text-white">
       <div className="flex min-h-screen items-center justify-center p-6">
@@ -27,7 +64,7 @@ export default function LoginPage() {
           </div>
 
           {/* FORM */}
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleLogin}>
             {/* EMAIL */}
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">Email</label>
@@ -50,6 +87,8 @@ export default function LoginPage() {
                   focus:border-white/20
                   focus:bg-white/[0.05]
                 "
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -60,6 +99,8 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="
                   w-full
                   rounded-2xl
@@ -86,7 +127,7 @@ export default function LoginPage() {
               </label>
 
               <button
-                type="button"
+                type="submit"
                 className="
                   text-zinc-400
                   transition

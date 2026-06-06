@@ -2,10 +2,7 @@
   "compilerOptions": {
     "target": "ES2023",
     "module": "ESNext",
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "lib": ["dom", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,9 +17,7 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "app/*"
-      ]
+      "@/*": ["app/*"]
     },
     "plugins": [
       {
@@ -39,10 +34,10 @@
     "next-prisma-auth-crud-ai/app/layout.tsx",
     "next-prisma-auth-crud-ai/app/api/users",
     ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "prisma/migrations"
-  ]
+  "exclude": ["node_modules", "prisma/migrations"]
 }

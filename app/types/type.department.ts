@@ -1,6 +1,19 @@
 export type Department = {
-  id: number;
+  id: string;
+
   name: string;
-  manager: string;
-  totalEmployees: number;
+
+  jobdesk: string;
+
+  plant: string;
+
+  createdAt?: Date;
+};
+
+export type DepartmentForm = {
+  name: string;
+
+  jobdesk: string;
+
+  plant: string;
 };
