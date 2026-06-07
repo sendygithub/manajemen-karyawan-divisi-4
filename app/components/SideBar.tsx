@@ -2,47 +2,21 @@
 
 import Link from "next/link";
 
-import {
-  LayoutDashboard,
-  User,
-  Settings,
-  Bell,
-  LogOut,
-  TreePalm,
-  FileUser,
-  UserRound,
-  Calendar,
-  Check,
-  CalendarX2,
-  ClipboardCheck,
-  Building2,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
-const menus = [
-  {
-    icon: LayoutDashboard,
-    href: "/dashboard/admin",
-  },
-  {
-    icon: UserRound,
-    href: "/dashboard/admin/employees",
-  },
-  {
-    icon: ClipboardCheck,
-    href: "/dashboard/admin/attendance",
-  },
-  {
-    icon: CalendarX2,
-    href: "/dashboard/admin/leave",
-  },
-  { icon: Building2, href: "/dashboard/admin/department" },
-  {
-    icon: Settings,
-    href: "/dashboard/admin/setting",
-  },
-];
+import { signOut, useSession } from "next-auth/react";
+
+import { adminMenus } from "./SideBarAdmin";
+
+import { employeeMenus } from "./SideBarEmployee";
 
 export default function Sidebar() {
+  const { data: session } = useSession();
+
+  const role = session?.user?.role;
+
+  const menus = role === "ADMIN" ? adminMenus : employeeMenus;
+
   return (
     <aside
       className="
@@ -84,18 +58,18 @@ export default function Sidebar() {
               key={index}
               href={menu.href}
               className="
-                group
-                flex
-                h-12
-                w-12
-                items-center
-                justify-center
-                rounded-2xl
-                text-zinc-400
-                transition
-                hover:bg-white
-                hover:text-black
-              "
+                  group
+                  flex
+                  h-12
+                  w-12
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  text-zinc-400
+                  transition
+                  hover:bg-white
+                  hover:text-black
+                "
             >
               <Icon size={22} />
             </Link>
@@ -105,6 +79,7 @@ export default function Sidebar() {
 
       {/* LOGOUT */}
       <button
+        onClick={() => signOut()}
         className="
           flex
           h-12

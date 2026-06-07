@@ -34,6 +34,9 @@ model Employee {
   // Relasi ke User
   userId       String
   user         User       @relation(fields: [userId], references: [id])
+//relasi ke Leave
+  leaves       Leave[]
+
 
   // PERBAIKAN: Relasi ke Department
   departmentId String
@@ -59,4 +62,34 @@ model Department {
   createdAt DateTime @default(now())
   // Relasi ke Employee (1 Department bisa punya banyak Employee)
   employees Employee[]
+}
+
+
+model Leave {
+  id         String        @id @default(cuid())
+
+  leaveType  LeaveType
+  startDate  DateTime
+  endDate    DateTime
+
+  reason     String
+
+  status     LeaveStatus   @default(PENDING)
+
+  createdAt  DateTime      @default(now())
+
+  employeeId String
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PERSONAL
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

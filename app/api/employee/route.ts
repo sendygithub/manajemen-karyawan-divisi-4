@@ -4,75 +4,73 @@ import { prisma } from "../../../lib/prisma";
 
 export async function POST(request: Request) {
   try {
+    // 1. Ambil data dari body request front-end
     const body = await request.json();
+    const { name, email, position, departmentId } = body;
 
-    console.log(body);
-
-    const { name, email, position, department } = body;
-
-    // VALIDATION
-    if (!name || !email || !position || !department) {
+    // 2. Validasi input dasar
+    if (!name || !email || !position || !departmentId) {
       return NextResponse.json(
         {
-          message: "All fields are required",
+          message:
+            "Semua field wajib diisi (Name, Email, Position, Department).",
         },
-        {
-          status: 400,
-        },
+        { status: 400 },
       );
     }
 
-    // CHECK EMAIL
+    // 3. Validasi apakah email karyawan sudah terdaftar (karena @unique di skema)
     const existingEmployee = await prisma.employee.findUnique({
-      where: {
-        email,
-      },
+      where: { email },
     });
 
     if (existingEmployee) {
       return NextResponse.json(
-        {
-          message: "Email already exists",
-        },
-        {
-          status: 400,
-        },
+        { message: "Karyawan dengan email ini sudah terdaftar." },
+        { status: 400 },
       );
     }
 
-    // CREATE EMPLOYEE
-    const employee = await prisma.employee.create({
+    // 4. Ambil atau tentukan userId untuk relasi User (Wajib berdasarkan skema kamu)
+    // TODO: Ganti bagian ini dengan session user login asli jika auth sudah aktif
+    const defaultUser = await prisma.user.findFirst();
+
+    if (!defaultUser) {
+      return NextResponse.json(
+        { message: "Data master User tidak ditemukan untuk relasi akun." },
+        { status: 500 },
+      );
+    }
+
+    // 5. Simpan data Employee baru ke database
+    const newEmployee = await prisma.employee.create({
       data: {
         name,
         email,
         position,
-        department,
-
-        // sementara dummy
-        userId: "temp-user-id",
+        departmentId, // Menghubungkan ID Departemen
+        userId: defaultUser.id, // Menghubungkan ID User pengelola/pembuat
+      },
+      // Menginstruksikan Prisma untuk menyertakan data departemen dalam response
+      include: {
+        department: true,
       },
     });
 
+    // 6. Kirim respons sukses
     return NextResponse.json(
       {
-        message: "Employee created",
-
-        employee,
+        message: "Karyawan berhasil ditambahkan",
+        data: newEmployee,
       },
-      {
-        status: 201,
-      },
+      { status: 201 },
     );
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    console.error("Error creating employee:", error);
 
     return NextResponse.json(
-      {
-        message: "Internal server error",
-      },
-      {
-        status: 500,
-      },
+      { message: "Terjadi kesalahan pada server.", error: error.message },
+      { status: 500 },
     );
   }
 }

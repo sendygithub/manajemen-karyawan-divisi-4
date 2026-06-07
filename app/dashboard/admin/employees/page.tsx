@@ -29,13 +29,13 @@ export default function EmployeesPage() {
     name: "",
     email: "",
     position: "",
-    department: "",
+    departmentId: "",
   });
 
   const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
-    async function fetchDepartments() {
+    async function fetchDepartment() {
       try {
         const data = await getDepartments();
         setDepartments(data);
@@ -44,11 +44,13 @@ export default function EmployeesPage() {
       }
     }
 
-    fetchDepartments();
+    fetchDepartment();
   }, []);
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLSelectElement>,
   ) {
     setForm({
       ...form,
@@ -114,8 +116,8 @@ export default function EmployeesPage() {
         open={open}
         setOpen={setOpen}
         form={form}
-        setForm={setForm}
-        handleChange={handleChange}
+        setForm={setForm} // ✅ Pastikan mengoper variabel setForm dari useState langsung!
+        handleChange={handleChange} // ✅ Sesuaikan dengan nama fungsi di page.tsx (handleChange atau onChange)
         handleSubmit={handleSubmit}
         departments={departments}
       />

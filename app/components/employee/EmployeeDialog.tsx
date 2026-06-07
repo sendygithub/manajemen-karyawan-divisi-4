@@ -1,14 +1,42 @@
 import { EmployeeDialogProps } from "@/types/type.employee";
+import { toast } from "sonner";
+import { Employee } from "@prisma/client";
+import { createEmployee } from "service/employee.service";
 
+interface ExtendedEmployeeDialogProps extends EmployeeDialogProps {
+  onEmployeeAdded?: (newEmployee: any) => void;
+}
 export default function EmployeeDialog({
   open,
   setOpen,
   form,
   setForm,
   handleChange,
-  handleSubmit,
+  onEmployeeAdded, // Ambil fungsi ini dari props jika ada
   departments,
-}: EmployeeDialogProps) {
+}: ExtendedEmployeeDialogProps) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    await createEmployee(form)
+      .then((newEmployee) => {
+        toast.success("Employee created successfully!");
+        if (onEmployeeAdded) {
+          onEmployeeAdded(newEmployee);
+        }
+        setOpen(false);
+        setForm({
+          name: "",
+          email: "",
+          position: "",
+          departmentId: "",
+        });
+      })
+      .catch((error) => {
+        toast.error(error.message || "Failed to create employee");
+      });
+  }
+
   return (
     <div>
       {open && (
@@ -74,23 +102,13 @@ export default function EmployeeDialog({
                     name="departmentId"
                     value={form.departmentId}
                     onChange={handleChange}
-                    className="
-    w-full
-    mt-1
-    rounded-lg
-    bg-zinc-900
-    border
-    border-white/10
-    px-4
-    py-2
-    outline-none
-  "
+                    className="w-full    mt-1    rounded-lg    bg-zinc-900    border    border-white/10    px-4 py-2 outline-none"
                     required
                   >
                     <option value="">Select Department</option>
 
                     {departments.map((department) => (
-                      <option key={department.id} value={department.name}>
+                      <option key={department.id} value={department.id}>
                         {department.name}
                       </option>
                     ))}
