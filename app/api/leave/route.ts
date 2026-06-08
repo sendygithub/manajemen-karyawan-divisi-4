@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         },
       );
     }
-
+    console.log(body);
     // CREATE LEAVE
     const leave = await prisma.leave.create({
       data: {
@@ -45,12 +45,16 @@ export async function POST(request: Request) {
         status: 201,
       },
     );
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
 
     return NextResponse.json(
       {
-        message: "Internal server error",
+        message: "Internal Server Error terjadi.",
+
+        error_spesifik: error.message,
+
+        prisma_code: error.code,
       },
       {
         status: 500,

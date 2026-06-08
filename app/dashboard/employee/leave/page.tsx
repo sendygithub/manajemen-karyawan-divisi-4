@@ -1,15 +1,9 @@
 "use client";
 
 import { useState } from "react";
-
-type LeaveRequest = {
-  id: number;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: "Pending" | "Approved" | "Rejected";
-};
+import { createLeave, getLeaves } from "service/leave.service";
+import { toast, useSonner } from "sonner";
+import { LeaveRequest } from "@/types/type.leaverequest";
 
 export default function EmployeeLeavePage() {
   const [open, setOpen] = useState(false);
@@ -40,7 +34,6 @@ export default function EmployeeLeavePage() {
       status: "Pending",
     },
   ]);
-
   const [form, setForm] = useState({
     leaveType: "",
     startDate: "",
@@ -49,7 +42,9 @@ export default function EmployeeLeavePage() {
   });
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     setForm({
       ...form,
@@ -57,19 +52,10 @@ export default function EmployeeLeavePage() {
     });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const newLeave: LeaveRequest = {
-      id: Date.now(),
-      leaveType: form.leaveType,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      reason: form.reason,
-      status: "Pending",
-    };
-
-    setLeaveRequests([newLeave, ...leaveRequests]);
+    await createLeave({ ...form, employeeId: "1" });
 
     setForm({
       leaveType: "",
@@ -77,8 +63,6 @@ export default function EmployeeLeavePage() {
       endDate: "",
       reason: "",
     });
-
-    setOpen(false);
   }
 
   function getStatusStyle(status: LeaveRequest["status"]) {
@@ -204,15 +188,21 @@ export default function EmployeeLeavePage() {
               <div>
                 <label className="text-sm text-zinc-400">Leave Type</label>
 
-                <input
-                  type="text"
+                <select
                   name="leaveType"
                   value={form.leaveType}
                   onChange={handleChange}
-                  placeholder="Annual Leave"
                   className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
                   required
-                />
+                >
+                  <option value="">Select Leave Type</option>
+
+                  <option value="ANNUAL">Annual Leave</option>
+
+                  <option value="SICK">Sick Leave</option>
+
+                  <option value="PERSONAL">Personal Leave</option>
+                </select>
               </div>
 
               <div>
