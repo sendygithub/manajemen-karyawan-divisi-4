@@ -6,11 +6,19 @@ import { prisma } from "../../../lib/prisma";
 
 export async function POST(request: Request) {
   try {
+    // =========================
+    // 1. Ambil data dari body request
+    // =========================
     const body = await request.json();
-    console.log("BODY:", body);
+
     const { name, email, password } = body;
 
-    // VALIDATION
+    console.log("BODY:", body);
+
+    // =========================
+    // 2. Validasi input
+    // Pastikan seluruh field wajib terisi
+    // =========================
     if (!name || !email || !password) {
       return NextResponse.json(
         {
@@ -21,12 +29,17 @@ export async function POST(request: Request) {
         },
       );
     }
+
     console.log({
       name,
       email,
       password,
     });
-    // CHECK EMAIL
+
+    // =========================
+    // 3. Cek apakah email sudah terdaftar
+    // Karena field email bersifat unique
+    // =========================
     const existingUser = await prisma.user.findUnique({
       where: {
         email,
@@ -44,20 +57,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // HASH PASSWORD
+    // =========================
+    // 4. Hash password
+    // Password tidak boleh disimpan
+    // dalam bentuk plain text
+    // =========================
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // CREATE USER
+    // =========================
+    // 5. Simpan user baru ke database
+    // Role otomatis menggunakan default
+    // dari schema Prisma (EMPLOYEE)
+    // =========================
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-
-        // otomatis EMPLOYEE
       },
     });
 
+    // =========================
+    // 6. Kembalikan response sukses
+    // Jangan kirim password ke client
+    // =========================
     return NextResponse.json(
       {
         message: "Register success",
@@ -74,6 +97,9 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
+    // =========================
+    // 7. Tangani error server
+    // =========================
     console.log(error);
 
     return NextResponse.json(

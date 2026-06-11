@@ -1,10 +1,43 @@
-import { EmployeeDialogProps } from "@/types/type.employee";
 import { toast } from "sonner";
 import { Employee } from "@prisma/client";
 import { createEmployee } from "service/employee.service";
+import { Department } from "@/types/type.department";
 
-interface ExtendedEmployeeDialogProps extends EmployeeDialogProps {
-  onEmployeeAdded?: (newEmployee: any) => void;
+export interface EmployeeDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+
+  form: {
+    userId: string;
+    name: string;
+    position: string;
+    departmentId: string;
+  };
+
+  setForm: React.Dispatch<
+    React.SetStateAction<{
+      userId: string;
+      name: string;
+      position: string;
+      departmentId: string;
+    }>
+  >;
+
+  handleChange: (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLSelectElement>,
+  ) => void;
+
+  onEmployeeAdded?: (employee: Employee) => void;
+
+  users: {
+    id: string;
+    name: string;
+    email: string;
+  }[];
+
+  departments: Department[];
 }
 export default function EmployeeDialog({
   open,
@@ -12,9 +45,10 @@ export default function EmployeeDialog({
   form,
   setForm,
   handleChange,
-  onEmployeeAdded, // Ambil fungsi ini dari props jika ada
+  onEmployeeAdded,
+  users,
   departments,
-}: ExtendedEmployeeDialogProps) {
+}: EmployeeDialogProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -26,8 +60,8 @@ export default function EmployeeDialog({
         }
         setOpen(false);
         setForm({
+          userId: "",
           name: "",
-          email: "",
           position: "",
           departmentId: "",
         });
@@ -55,25 +89,32 @@ export default function EmployeeDialog({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <label className="text-sm text-zinc-400">User Account</label>
+
+                <select
+                  name="userId"
+                  value={form.userId}
+                  onChange={handleChange}
+                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
+                  required
+                >
+                  <option value="">Select User</option>
+
+                  {users.map((user: any) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="text-sm text-zinc-400">Name</label>
 
                 <input
                   type="text"
                   name="name"
                   value={form.name}
-                  onChange={handleChange}
-                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-zinc-400">Email</label>
-
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
                   onChange={handleChange}
                   className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
                   required
@@ -93,8 +134,6 @@ export default function EmployeeDialog({
                 />
               </div>
               <div>
-                <label className="text-sm text-zinc-400">Department</label>
-
                 <div>
                   <label className="text-sm text-zinc-400">Department</label>
 

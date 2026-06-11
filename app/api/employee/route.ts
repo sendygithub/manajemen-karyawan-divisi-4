@@ -4,73 +4,194 @@ import { prisma } from "../../../lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    // 1. Ambil data dari body request front-end
+    // =========================
+    // MENGAMBIL DATA DARI REQUEST BODY
+    // Data dikirim dari form Add Employee
+    // =========================
     const body = await request.json();
-    const { name, email, position, departmentId } = body;
 
-    // 2. Validasi input dasar
-    if (!name || !email || !position || !departmentId) {
+    const { name, position, departmentId, userId } = body;
+
+    // =========================
+    // VALIDASI INPUT
+    // Semua field wajib diisi karena
+    // Employee harus terhubung ke User
+    // dan Department
+    // =========================
+    if (!name || !position || !departmentId || !userId) {
       return NextResponse.json(
         {
-          message:
-            "Semua field wajib diisi (Name, Email, Position, Department).",
+          message: "Name, Position, Department dan User wajib diisi",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
-    // 3. Validasi apakah email karyawan sudah terdaftar (karena @unique di skema)
+    // =========================
+    // CEK USER
+    // Memastikan user yang dipilih
+    // benar-benar ada di database
+    // =========================
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: "User tidak ditemukan",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    // =========================
+    // CEK DEPARTMENT
+    // Memastikan department yang dipilih
+    // tersedia di database
+    // =========================
+    const department = await prisma.department.findUnique({
+      where: {
+        id: departmentId,
+      },
+    });
+
+    if (!department) {
+      return NextResponse.json(
+        {
+          message: "Department tidak ditemukan",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    // =========================
+    // CEK RELASI USER - EMPLOYEE
+    // Karena pada schema:
+    // userId bersifat @unique
+    // maka satu user hanya boleh
+    // memiliki satu data employee
+    // =========================
     const existingEmployee = await prisma.employee.findUnique({
-      where: { email },
+      where: {
+        userId,
+      },
     });
 
     if (existingEmployee) {
       return NextResponse.json(
-        { message: "Karyawan dengan email ini sudah terdaftar." },
-        { status: 400 },
+        {
+          message: "User sudah memiliki employee",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
-    // 4. Ambil atau tentukan userId untuk relasi User (Wajib berdasarkan skema kamu)
-    // TODO: Ganti bagian ini dengan session user login asli jika auth sudah aktif
-    const defaultUser = await prisma.user.findFirst();
-
-    if (!defaultUser) {
-      return NextResponse.json(
-        { message: "Data master User tidak ditemukan untuk relasi akun." },
-        { status: 500 },
-      );
-    }
-
-    // 5. Simpan data Employee baru ke database
-    const newEmployee = await prisma.employee.create({
+    // =========================
+    // MEMBUAT DATA EMPLOYEE BARU
+    // Sekaligus menghubungkan
+    // Employee dengan User
+    // dan Department
+    // =========================
+    const employee = await prisma.employee.create({
       data: {
         name,
-        email,
         position,
-        departmentId, // Menghubungkan ID Departemen
-        userId: defaultUser.id, // Menghubungkan ID User pengelola/pembuat
+        departmentId,
+        userId,
       },
-      // Menginstruksikan Prisma untuk menyertakan data departemen dalam response
       include: {
         department: true,
+        user: true,
       },
     });
 
-    // 6. Kirim respons sukses
+    // =========================
+    // RESPONSE BERHASIL
+    // Mengembalikan data employee
+    // yang baru dibuat
+    // =========================
     return NextResponse.json(
       {
-        message: "Karyawan berhasil ditambahkan",
-        data: newEmployee,
+        message: "Employee berhasil dibuat",
+        data: employee,
       },
-      { status: 201 },
+      {
+        status: 201,
+      },
     );
   } catch (error: any) {
-    console.error("Error creating employee:", error);
+    // =========================
+    // ERROR HANDLER
+    // Menangkap seluruh error
+    // yang terjadi selama proses
+    // =========================
+    console.log(error);
 
     return NextResponse.json(
-      { message: "Terjadi kesalahan pada server.", error: error.message },
-      { status: 500 },
+      {
+        message: "Internal Server Error",
+        error: error.message,
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    // =========================
+    // MENGAMBIL SELURUH DATA EMPLOYEE
+    // Beserta data User dan Department
+    // yang berelasi
+    // =========================
+    const employees = await prisma.employee.findMany({
+      include: {
+        department: true,
+        user: true,
+      },
+
+      // =========================
+      // MENAMPILKAN DATA TERBARU
+      // DI URUTKAN BERDASARKAN
+      // WAKTU PEMBUATAN
+      // =========================
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // =========================
+    // RESPONSE BERHASIL
+    // Mengirim daftar employee
+    // ke frontend
+    // =========================
+    return NextResponse.json(employees);
+  } catch (error) {
+    // =========================
+    // ERROR HANDLER
+    // Jika gagal mengambil data
+    // employee dari database
+    // =========================
+    return NextResponse.json(
+      {
+        message: "Failed get employees",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

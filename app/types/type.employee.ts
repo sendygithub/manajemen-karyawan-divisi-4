@@ -2,7 +2,6 @@ import { Department } from "./type.department";
 
 export type EmployeeForm = {
   name: string;
-  email: string;
   position: string;
   departmentId: string;
 };

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createLeave, getLeaves } from "service/leave.service";
 import { toast, useSonner } from "sonner";
 import { LeaveRequest } from "@/types/type.leaverequest";
+import LeaveDialog from "@/components/leave/LeaveDialog";
+import LeaveTableEmployee from "@/components/leave/LeaveTable";
 
 export default function EmployeeLeavePage() {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [leaves, setLeaves] = useState([]);
 
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
     {
@@ -55,7 +59,11 @@ export default function EmployeeLeavePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    setIsLoading(true);
     await createLeave({ ...form, employeeId: "1" });
+    toast.success("Leave request submitted successfully");
+    // tutup dialog
+    setOpen(false);
 
     setForm({
       leaveType: "",
@@ -65,21 +73,17 @@ export default function EmployeeLeavePage() {
     });
   }
 
-  function getStatusStyle(status: LeaveRequest["status"]) {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-500/20 text-yellow-400";
+  async function fetchLeaves() {
+    const res = await fetch("/api/leave");
 
-      case "Approved":
-        return "bg-green-500/20 text-green-400";
+    const data = await res.json();
 
-      case "Rejected":
-        return "bg-red-500/20 text-red-400";
-
-      default:
-        return "bg-zinc-500/20 text-zinc-400";
-    }
+    setLeaves(data);
   }
+
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
 
   return (
     <div>
@@ -127,133 +131,107 @@ export default function EmployeeLeavePage() {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        <table className="w-full">
-          <thead className="bg-white/5">
-            <tr className="text-left">
-              <th className="p-4">Leave Type</th>
-
-              <th className="p-4">Start Date</th>
-
-              <th className="p-4">End Date</th>
-
-              <th className="p-4">Reason</th>
-
-              <th className="p-4">Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {leaveRequests.map((leave) => (
-              <tr key={leave.id} className="border-t border-white/10">
-                <td className="p-4">{leave.leaveType}</td>
-
-                <td className="p-4">{leave.startDate}</td>
-
-                <td className="p-4">{leave.endDate}</td>
-
-                <td className="p-4">{leave.reason}</td>
-
-                <td className="p-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
-                      leave.status,
-                    )}`}
-                  >
-                    {leave.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <LeaveTableEmployee leaves={leaves} />
 
       {/* MODAL */}
-      {open && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl bg-[#18181b] border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Request Leave</h2>
+      <LeaveDialog
+        open={open}
+        setOpen={setOpen}
+        form={form}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+}
 
-              <button
-                onClick={() => setOpen(false)}
-                className="text-zinc-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
+type DialogProps = {
+  open: boolean;
+  onClose: () => void;
+  form: {
+    leaveType: string;
+    startDate: string;
+    endDate: string;
+    reason: string;
+  };
+  onChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => void;
+  onSubmit: (e: React.FormEvent) => Promise<void> | void;
+};
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm text-zinc-400">Leave Type</label>
+function EmployeeLeavePageDialog({
+  open,
+  onClose,
+  form,
+  onChange,
+  onSubmit,
+}: DialogProps) {
+  if (!open) return null;
 
-                <select
-                  name="leaveType"
-                  value={form.leaveType}
-                  onChange={handleChange}
-                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
-                  required
-                >
-                  <option value="">Select Leave Type</option>
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-                  <option value="ANNUAL">Annual Leave</option>
+      <div className="relative bg-white/5 rounded-2xl p-6 w-full max-w-lg">
+        <h3 className="text-lg font-bold mb-4">Request Leave</h3>
 
-                  <option value="SICK">Sick Leave</option>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <select
+            name="leaveType"
+            value={form.leaveType}
+            onChange={onChange}
+            className="w-full p-2 rounded"
+          >
+            <option value="">Select leave type</option>
+            <option>Annual Leave</option>
+            <option>Sick Leave</option>
+            <option>Personal Leave</option>
+          </select>
 
-                  <option value="PERSONAL">Personal Leave</option>
-                </select>
-              </div>
+          <input
+            name="startDate"
+            type="date"
+            value={form.startDate}
+            onChange={onChange}
+            className="w-full p-2 rounded"
+          />
 
-              <div>
-                <label className="text-sm text-zinc-400">Start Date</label>
+          <input
+            name="endDate"
+            type="date"
+            value={form.endDate}
+            onChange={onChange}
+            className="w-full p-2 rounded"
+          />
 
-                <input
-                  type="date"
-                  name="startDate"
-                  value={form.startDate}
-                  onChange={handleChange}
-                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
-                  required
-                />
-              </div>
+          <textarea
+            name="reason"
+            value={form.reason}
+            onChange={onChange}
+            className="w-full p-2 rounded"
+          />
 
-              <div>
-                <label className="text-sm text-zinc-400">End Date</label>
-
-                <input
-                  type="date"
-                  name="endDate"
-                  value={form.endDate}
-                  onChange={handleChange}
-                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-zinc-400">Reason</label>
-
-                <textarea
-                  name="reason"
-                  value={form.reason}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2 outline-none resize-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-lg bg-white text-black py-2 font-medium hover:bg-zinc-200 transition"
-              >
-                Submit Request
-              </button>
-            </form>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded bg-zinc-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded bg-white text-black"
+            >
+              Submit
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </div>
     </div>
   );
 }

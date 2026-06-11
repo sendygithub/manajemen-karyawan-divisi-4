@@ -1,4 +1,10 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+
 export default function Topbar() {
+  const { data: session } = useSession();
+
   return (
     <header
       className="
@@ -14,7 +20,9 @@ export default function Topbar() {
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
-        <p className="text-sm text-zinc-500">Welcome back</p>
+        <p className="text-sm text-zinc-500">
+          Welcome back, {session?.user?.name}
+        </p>
       </div>
 
       <div className="flex items-center gap-4">

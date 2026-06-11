@@ -1,4 +1,9 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+
 export default function EmployeeDashboardPage() {
+  const { data: session } = useSession();
   const attendanceHistory = [
     {
       id: 1,
@@ -43,7 +48,7 @@ export default function EmployeeDashboardPage() {
         <h1 className="text-3xl font-bold">Employee Dashboard</h1>
 
         <p className="text-zinc-400 mt-2">
-          Welcome back, have a productive day
+          selamat datang kembali, {session?.user?.name || "Employee"}!
         </p>
       </div>
 

@@ -1,85 +1,79 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
-  
- 
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id       String @id @default(cuid())
-  name     String
-  email    String @unique
-  password String
-  role     Role @default(EMPLOYEE)
-  createdAt DateTime @default(now())
-  employees Employee[]
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  role      Role      @default(EMPLOYEE)
+  createdAt DateTime  @default(now())
+  name      String
+  employee  Employee?
 }
 
 model Employee {
-  id         String   @id @default(cuid())
+  id           String     @id @default(cuid())
+  name         String
+  position     String
+  phone        String?
+  gender       Gender?
+  birthDate    DateTime?
+  address      String?
 
-  name       String
-  email      String   @unique
-  position   String
-  // Relasi ke User
-  userId       String
+  joinDate     DateTime?
+
+  emergencyContact String?
+  emergencyPhone   String?
+
+  bankName     String?
+  bankAccount  String?
+
+  userId       String     @unique
   user         User       @relation(fields: [userId], references: [id])
-//relasi ke Leave
-  leaves       Leave[]
 
-
-  // PERBAIKAN: Relasi ke Department
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
 
-  createdAt  DateTime @default(now())
+  leaves       Leave[]
 
+  createdAt    DateTime @default(now())
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model Department {
+  id        String     @id @default(cuid())
+  name      String
+  jobdesk   String
+  plant     String
+  createdAt DateTime   @default(now())
+  employees Employee[]
+}
+
+model Leave {
+  id         String      @id @default(cuid())
+  leaveType  LeaveType
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
+  status     LeaveStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id])
 }
 
 enum Role {
   ADMIN
   EMPLOYEE
-}
-
-
-model Department {
-  id        String   @id @default(cuid())
-
-  name      String
-  jobdesk   String
-  plant     String
-
-  createdAt DateTime @default(now())
-  // Relasi ke Employee (1 Department bisa punya banyak Employee)
-  employees Employee[]
-}
-
-
-model Leave {
-  id         String        @id @default(cuid())
-
-  leaveType  LeaveType
-  startDate  DateTime
-  endDate    DateTime
-
-  reason     String
-
-  status     LeaveStatus   @default(PENDING)
-
-  createdAt  DateTime      @default(now())
-
-  employeeId String
-  employee   Employee      @relation(fields: [employeeId], references: [id])
 }
 
 enum LeaveType {

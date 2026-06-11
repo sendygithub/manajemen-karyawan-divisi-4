@@ -1,34 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../lib/prisma";
+import { prisma } from "lib/prisma";
 
-export async function GET(request: NextRequest) {
+// =========================
+// GET USERS WITHOUT EMPLOYEE
+// =========================
+// Digunakan untuk mengambil daftar user
+// yang belum memiliki data employee.
+//
+// Tujuan:
+// - Admin dapat memilih user saat membuat employee.
+// - Mencegah 1 user memiliki lebih dari 1 employee.
+// =========================
+export async function GET() {
   try {
-    const users = await prisma.user.findMany();
-    return NextResponse.json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch users" },
-      { status: 500 },
-    );
-  }
-}
+    // =========================
+    // AMBIL DATA USER
+    // =========================
+    // Hanya mengambil user yang:
+    // employee = null
+    //
+    // Artinya user tersebut belum terhubung
+    // dengan tabel Employee.
+    // =========================
+    const users = await prisma.user.findMany({
+      where: {
+        employee: null,
+      },
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const user = await prisma.user.create({
-      data: {
-        email: body.email,
-        name: body.name,
+      // =========================
+      // SELECT FIELD YANG DIBUTUHKAN
+      // =========================
+      // Tidak perlu mengirim password
+      // atau data sensitif lainnya ke frontend.
+      // =========================
+      select: {
+        id: true,
+        name: true,
+        email: true,
       },
     });
-    return NextResponse.json(user, { status: 201 });
+
+    // =========================
+    // RESPONSE SUKSES
+    // =========================
+    // Mengirim daftar user yang
+    // belum memiliki employee.
+    // =========================
+    return NextResponse.json(users);
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.log(error);
+
+    // =========================
+    // RESPONSE ERROR
+    // =========================
+    // Terjadi kesalahan saat mengambil data.
+    // =========================
     return NextResponse.json(
-      { error: "Failed to create user" },
-      { status: 500 },
+      {
+        message: "Failed get users",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

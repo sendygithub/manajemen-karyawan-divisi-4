@@ -5,34 +5,64 @@ import EmployeeTable from "@/components/employee/EmployeeTable";
 import EmployeeDialog from "@/components/employee/EmployeeDialog";
 import { Department } from "@/types/type.department";
 import { getDepartments } from "service/department.service";
-import { Employee } from "@prisma/client";
 import { toast } from "sonner"; // Opsional: gunakan sonner jika sudah diinstall
+import { getUsers } from "service/user.service";
+import { getEmployees } from "service/employee.service";
+
+type EmployeeData = {
+  userId: string; // Tambahkan userId untuk mencocokkan dengan form
+  id: string;
+  name: string;
+  email: string;
+  position: string;
+  department: {
+    name: string;
+  };
+};
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 export default function EmployeesPage() {
   const [open, setOpen] = useState(false);
 
-  // 1. PERBAIKAN: Sesuaikan struktur mock data dengan model Prisma terbaru (menggunakan id string dan departmentId)
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: "emp-1",
-      name: "John Doe",
-      email: "john@example.com",
-      position: "Frontend Developer",
-      departmentId: "1", // Merujuk ke ID department, bukan teks langsung
-      userId: "user-mock-1", // Diperlukan karena skema mewajibkan userId
-      createdAt: new Date(),
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
 
-  // 2. PERBAIKAN: Tetap gunakan field 'department' di form untuk mencocokkan EmployeeDialog
+  const [employees, setEmployees] = useState<EmployeeData[]>([]);
+
   const [form, setForm] = useState({
+    userId: "",
     name: "",
-    email: "",
     position: "",
     departmentId: "",
   });
 
   const [departments, setDepartments] = useState<Department[]>([]);
+  async function fetchEmployees() {
+    try {
+      const data = await getEmployees();
+
+      setEmployees(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    async function fetchEmployees() {
+      try {
+        const data = await getEmployees();
+
+        setEmployees(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchEmployees();
+  }, []);
 
   useEffect(() => {
     async function fetchDepartment() {
@@ -47,6 +77,20 @@ export default function EmployeesPage() {
     fetchDepartment();
   }, []);
 
+  useEffect(() => {
+    async function fetchUsers() {
+      const data = await getUsers();
+
+      setUsers(data);
+    }
+
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
   function handleChange(
     e:
       | React.ChangeEvent<HTMLInputElement>
@@ -56,39 +100,6 @@ export default function EmployeesPage() {
       ...form,
       [e.target.name]: e.target.value,
     });
-  }
-
-  // 3. PERBAIKAN: Sesuaikan dengan payload data yang akan di-POST ke API nantinya
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!form.departmentId) {
-      toast.error("Silakan pilih departemen terlebih dahulu.");
-      return;
-    }
-
-    const newEmployee: Employee = {
-      id: crypto.randomUUID(), // Menghasilkan string UUID yang aman untuk tipe data string
-      name: form.name,
-      email: form.email,
-      position: form.position,
-      departmentId: form.departmentId,
-      userId: "user-mock-id", // Sementara di-hardcode sebelum dipasang auth session asli
-      createdAt: new Date(),
-    };
-
-    setEmployees([...employees, newEmployee]);
-    toast.success("Karyawan berhasil ditambahkan (Lokal)");
-
-    // Reset Form
-    setForm({
-      name: "",
-      email: "",
-      position: "",
-      departmentId: "",
-    });
-
-    setOpen(false);
   }
 
   return (
@@ -116,11 +127,14 @@ export default function EmployeesPage() {
         open={open}
         setOpen={setOpen}
         form={form}
-        setForm={setForm} // ✅ Pastikan mengoper variabel setForm dari useState langsung!
-        handleChange={handleChange} // ✅ Sesuaikan dengan nama fungsi di page.tsx (handleChange atau onChange)
-        handleSubmit={handleSubmit}
+        setForm={setForm}
+        handleChange={handleChange}
         departments={departments}
+        users={users}
+        onEmployeeAdded={fetchEmployees}
       />
     </div>
   );
 }
+
+// Catatan: Pastikan API endpoint untuk mendapatkan employees sudah benar dan mengembalikan data sesuai dengan tipe EmployeeData yang digunakan di frontend.

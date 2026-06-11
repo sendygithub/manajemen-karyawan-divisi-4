@@ -1,21 +1,40 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
+// =========================
+// CREATE DEPARTMENT
+// Endpoint untuk membuat data department baru
+// Method: POST
+// =========================
 export async function POST(request: Request) {
   try {
-    // 1. Ambil data dari body request
+    // =========================
+    // AMBIL DATA DARI REQUEST BODY
+    // Data dikirim dari form frontend
+    // =========================
     const body = await request.json();
     const { name, jobdesk, plant } = body;
 
-    // 2. Validasi input sederhana
+    // =========================
+    // VALIDASI INPUT
+    // Mencegah data kosong tersimpan ke database
+    // =========================
     if (!name || !jobdesk || !plant) {
       return NextResponse.json(
-        { message: "Semua field (name, jobdesk, plant) wajib diisi." },
-        { status: 400 },
+        {
+          message: "Semua field (name, jobdesk, plant) wajib diisi.",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
-    // 3. Simpan data ke database menggunakan Prisma
+    // =========================
+    // SIMPAN DATA DEPARTMENT
+    // Prisma akan membuat record baru
+    // pada tabel Department
+    // =========================
     const newDepartment = await prisma.department.create({
       data: {
         name,
@@ -24,36 +43,69 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Kembalikan respons sukses
+    // =========================
+    // RESPONSE BERHASIL
+    // Mengembalikan data department
+    // yang baru dibuat
+    // =========================
     return NextResponse.json(
       {
         message: "Department berhasil dibuat",
         data: newDepartment,
       },
-      { status: 201 },
+      {
+        status: 201,
+      },
     );
   } catch (error) {
     console.error("Error creating department:", error);
 
+    // =========================
+    // ERROR HANDLER
+    // Menangani error yang terjadi
+    // selama proses create department
+    // =========================
     return NextResponse.json(
-      { message: "Terjadi kesalahan pada server." },
-      { status: 500 },
+      {
+        message: "Terjadi kesalahan pada server.",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }
 
+// =========================
+// GET ALL DEPARTMENTS
+// Mengambil seluruh data department
+// Method: GET
+// =========================
 export async function GET() {
   try {
+    // =========================
+    // AMBIL DATA DEPARTMENT
+    // Diurutkan berdasarkan data terbaru
+    // =========================
     const departments = await prisma.department.findMany({
       orderBy: {
         createdAt: "desc",
       },
     });
 
+    // =========================
+    // RESPONSE BERHASIL
+    // Mengirim seluruh data department
+    // ke frontend
+    // =========================
     return NextResponse.json(departments);
   } catch (error) {
     console.log(error);
 
+    // =========================
+    // ERROR HANDLER
+    // Menangani kegagalan query database
+    // =========================
     return NextResponse.json(
       {
         message: "Internal server error",

@@ -31,3 +31,13 @@ export async function getDepartments() {
 
   return response.json();
 }
+
+export async function getDepartmentById(id: string) {
+  const response = await fetch(`/api/department/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed fetch department");
+  }
+
+  return response.json();
+}
