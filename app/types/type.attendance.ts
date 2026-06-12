@@ -1,6 +1,15 @@
 export type Attendance = {
-  id: number;
-  name: string;
+  id: string;
+
   date: string;
-  status: "Present" | "Late" | "Sick" | "Leave";
+
+  status: "PRESENT" | "LATE";
+
+  checkIn?: string;
+
+  checkOut?: string;
+
+  employee: {
+    name: string;
+  };
 };

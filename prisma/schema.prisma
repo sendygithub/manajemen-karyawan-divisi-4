@@ -42,6 +42,8 @@ model Employee {
 
   leaves       Leave[]
 
+  attendance Attendance[]
+
   createdAt    DateTime @default(now())
 }
 
@@ -86,4 +88,28 @@ enum LeaveStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+
+model Attendance {
+  id         String   @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  date       DateTime
+
+  checkIn    DateTime?
+  checkOut   DateTime?
+
+  status     AttendanceStatus @default(PRESENT)
+
+  createdAt  DateTime @default(now())
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  LEAVE
 }

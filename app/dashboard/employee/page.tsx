@@ -1,32 +1,65 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import AttendanceTable from "@/components/attendance/AttendanceTable";
+import { toast } from "sonner";
+import { Attendance } from "@/types/type.attendance";
+import { useEffect, useState } from "react";
+import { Session } from "next-auth";
 
 export default function EmployeeDashboardPage() {
-  const { data: session } = useSession();
-  const attendanceHistory = [
-    {
-      id: 1,
-      date: "2026-06-04",
-      checkIn: "08:00",
-      checkOut: "17:00",
-      status: "Present",
-    },
-    {
-      id: 2,
-      date: "2026-06-03",
-      checkIn: "08:20",
-      checkOut: "17:05",
-      status: "Late",
-    },
-    {
-      id: 3,
-      date: "2026-06-02",
-      checkIn: "08:01",
-      checkOut: "17:00",
-      status: "Present",
-    },
-  ];
+  const [todayStatus, setTodayStatus] = useState("Not Checked In");
+
+  const [checkInTime, setCheckInTime] = useState("");
+
+  const [checkOutTime, setCheckOutTime] = useState("");
+
+  const [checkedIn, setCheckedIn] = useState(false);
+
+  const [checkedOut, setCheckedOut] = useState(false);
+  const [attendanceData, setAttendanceData] = useState<Attendance[]>([]);
+  useEffect(() => {
+    fetchAttendanceHistory();
+  }, []);
+
+  async function fetchAttendanceHistory() {
+    try {
+      const response = await fetch("/api/attendance/my");
+
+      const data = await response.json();
+
+      setAttendanceData(data);
+
+      if (data.length > 0) {
+        const latest = data[0];
+
+        if (latest.checkIn) {
+          setCheckedIn(true);
+
+          setCheckInTime(
+            new Date(latest.checkIn).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+        }
+
+        if (latest.checkOut) {
+          setCheckedOut(true);
+
+          setCheckOutTime(
+            new Date(latest.checkOut).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+        }
+
+        setTodayStatus(latest.status);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   function getStatusStyle(status: string) {
     switch (status) {
@@ -47,9 +80,7 @@ export default function EmployeeDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Employee Dashboard</h1>
 
-        <p className="text-zinc-400 mt-2">
-          selamat datang kembali, {session?.user?.name || "Employee"}!
-        </p>
+        <p className="text-zinc-400 mt-2">selamat datang kembali,</p>
       </div>
 
       {/* STATS */}
@@ -108,43 +139,7 @@ export default function EmployeeDashboardPage() {
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-white/10">
-          <table className="w-full">
-            <thead className="bg-white/5">
-              <tr className="text-left">
-                <th className="p-4">Date</th>
-
-                <th className="p-4">Check In</th>
-
-                <th className="p-4">Check Out</th>
-
-                <th className="p-4">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {attendanceHistory.map((attendance) => (
-                <tr key={attendance.id} className="border-t border-white/10">
-                  <td className="p-4">{attendance.date}</td>
-
-                  <td className="p-4">{attendance.checkIn}</td>
-
-                  <td className="p-4">{attendance.checkOut}</td>
-
-                  <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
-                        attendance.status,
-                      )}`}
-                    >
-                      {attendance.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AttendanceTable attendanceData={attendanceData} />
       </div>
     </div>
   );

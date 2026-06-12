@@ -138,3 +138,41 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: {
+        userId: session.user.id,
+      },
+    });
+
+    if (!employee) {
+      return NextResponse.json(
+        { message: "Employee not found" },
+        { status: 404 },
+      );
+    }
+
+    const leaves = await prisma.leave.findMany({
+      where: {
+        employeeId: employee.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(leaves);
+  } catch (error) {
+    console.log(error);
+
+    return NextResponse.json({ message: "Server Error" }, { status: 500 });
+  }
+}

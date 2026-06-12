@@ -56,6 +56,17 @@ export default function EmployeeLeavePage() {
     });
   }
 
+  useEffect(() => {
+    fetchLeave();
+  }, []);
+
+  async function fetchLeave() {
+    const response = await fetch("/api/leave");
+    const data = await response.json();
+
+    setLeaves(data);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -64,6 +75,8 @@ export default function EmployeeLeavePage() {
     toast.success("Leave request submitted successfully");
     // tutup dialog
     setOpen(false);
+    // REFRESH TABLE
+    await fetchLeave();
 
     setForm({
       leaveType: "",
