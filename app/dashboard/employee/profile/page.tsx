@@ -253,13 +253,18 @@ export default function ProfilePage() {
         </div>
 
         {/* SAVE BUTTON */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-zinc-200 transition disabled:opacity-50"
-        >
-          {isLoading ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="flex justify-end mb-4">
+          {isEditMode && (
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-white text-black px-6 py-2 rounded-lg"
+            >
+              klik klik
+              {isLoading ? "Saving..." : "Save Changes"}
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
