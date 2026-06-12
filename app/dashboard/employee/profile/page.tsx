@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -26,6 +26,7 @@ export default function ProfilePage() {
     bankName: "",
     bankAccount: "",
   });
+  const [isEditMode, setIsEditMode] = useState(false);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -57,10 +58,40 @@ export default function ProfilePage() {
       }
 
       toast.success("Profile updated successfully");
+      setIsEditMode(false);
     } catch (error: any) {
       toast.error(error.message || "Failed update profile");
     } finally {
       setIsLoading(false);
+    }
+  }
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  async function fetchProfile() {
+    try {
+      const response = await fetch("/api/profile");
+
+      const data = await response.json();
+
+      setForm({
+        name: data.name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        gender: data.gender || "",
+        birthDate: data.birthDate ? data.birthDate.split("T")[0] : "",
+        address: data.address || "",
+        position: data.position || "",
+        departmentId: data.departmentId || "",
+        joinDate: data.joinDate ? data.joinDate.split("T")[0] : "",
+        emergencyContact: data.emergencyContact || "",
+        emergencyPhone: data.emergencyPhone || "",
+        bankName: data.bankName || "",
+        bankAccount: data.bankAccount || "",
+      });
+    } catch (error) {
+      toast.error("Failed load profile");
     }
   }
 
@@ -73,6 +104,28 @@ export default function ProfilePage() {
         <p className="text-zinc-400 text-sm">
           Manage your personal employee information
         </p>
+      </div>
+      <div className="flex justify-end mb-6">
+        {!isEditMode ? (
+          <button
+            type="button"
+            onClick={() => setIsEditMode(true)}
+            className="bg-blue-600 px-4 py-2 rounded-lg text-white"
+          >
+            Edit Profile
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditMode(false);
+              fetchProfile();
+            }}
+            className="bg-zinc-700 px-4 py-2 rounded-lg text-white"
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -99,6 +152,7 @@ export default function ProfilePage() {
               name="name"
               value={form.name}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -111,6 +165,7 @@ export default function ProfilePage() {
               name="phone"
               value={form.phone}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -122,6 +177,7 @@ export default function ProfilePage() {
               name="gender"
               value={form.gender}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             >
               <option value="">Select Gender</option>
@@ -138,6 +194,7 @@ export default function ProfilePage() {
               name="birthDate"
               value={form.birthDate}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -150,6 +207,7 @@ export default function ProfilePage() {
               name="address"
               value={form.address}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -165,6 +223,7 @@ export default function ProfilePage() {
               name="position"
               value={form.position}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -177,6 +236,7 @@ export default function ProfilePage() {
               name="departmentId"
               value={form.departmentId}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -189,6 +249,7 @@ export default function ProfilePage() {
               name="joinDate"
               value={form.joinDate}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -206,6 +267,7 @@ export default function ProfilePage() {
               name="emergencyContact"
               value={form.emergencyContact}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -220,6 +282,7 @@ export default function ProfilePage() {
               name="emergencyPhone"
               value={form.emergencyPhone}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -235,6 +298,7 @@ export default function ProfilePage() {
               name="bankName"
               value={form.bankName}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -247,6 +311,7 @@ export default function ProfilePage() {
               name="bankAccount"
               value={form.bankAccount}
               onChange={handleChange}
+              disabled={!isEditMode}
               className="w-full mt-1 rounded-lg bg-zinc-900 border border-white/10 px-4 py-2"
             />
           </div>
@@ -260,7 +325,6 @@ export default function ProfilePage() {
               disabled={isLoading}
               className="bg-white text-black px-6 py-2 rounded-lg"
             >
-              klik klik
               {isLoading ? "Saving..." : "Save Changes"}
             </button>
           )}

@@ -36,11 +36,9 @@ export async function PUT(req: Request) {
     // Karena Employee terhubung ke User,
     // maka kita mencari employee berdasarkan
     // email user yang sedang login
-    const employee = await prisma.employee.findFirst({
+    const employee = await prisma.employee.findUnique({
       where: {
-        user: {
-          email: session.user.email,
-        },
+        userId: session.user.id,
       },
     });
 
@@ -110,6 +108,53 @@ export async function PUT(req: Request) {
       {
         status: 500,
       },
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    console.log("SESSION:", session);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: {
+        userId: session.user.id,
+      },
+      include: {
+        user: true,
+        department: true,
+      },
+    });
+
+    if (!employee) {
+      return NextResponse.json(
+        {
+          message: "Employee not found",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    console.log("EMPLOYEE:", employee);
+
+    return NextResponse.json(employee);
+  } catch (error) {
+    console.error("PROFILE ERROR:", error);
+
+    return NextResponse.json(
+      {
+        message: "Server Error",
+        error: String(error),
+      },
+      { status: 500 },
     );
   }
 }
