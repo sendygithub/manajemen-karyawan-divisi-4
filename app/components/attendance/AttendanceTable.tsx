@@ -5,6 +5,18 @@ export default function EmployeeAttendanceTable({
 }: {
   attendanceData: Attendance[];
 }) {
+  function getStatusColor(status: string) {
+    switch (status) {
+      case "PRESENT":
+        return "bg-green-500/20 text-green-400";
+      case "LATE":
+        return "bg-yellow-500/20 text-yellow-400";
+      case "ABSENT":
+        return "bg-red-500/20 text-red-400";
+      default:
+        return "bg-zinc-500/20 text-zinc-400";
+    }
+  }
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
       <table className="w-full">
@@ -43,7 +55,9 @@ export default function EmployeeAttendanceTable({
               </td>
 
               <td className="p-4">
-                <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${getStatusColor(attendance.status)}`}
+                >
                   {attendance.status}
                 </span>
               </td>

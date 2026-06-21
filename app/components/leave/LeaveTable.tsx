@@ -1,5 +1,10 @@
+"use client";
+
+import { updateLeaveStatus } from "action/leave.action";
+
 type Leave = {
   id: string;
+  employeeName: string; // 🔥 TAMBAH INI
   leaveType: string;
   startDate: string;
   endDate: string;
@@ -12,14 +17,20 @@ type Props = {
 };
 
 export default function LeaveTableEmployee({ leaves }: Props) {
+  const handleUpdate = async (id: string, status: "APPROVED" | "REJECTED") => {
+    try {
+      await updateLeaveStatus(id, status);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   function getStatusStyle(status: Leave["status"]) {
     switch (status) {
       case "APPROVED":
         return "bg-green-500/20 text-green-400";
-
       case "REJECTED":
         return "bg-red-500/20 text-red-400";
-
       default:
         return "bg-yellow-500/20 text-yellow-400";
     }
@@ -30,36 +41,36 @@ export default function LeaveTableEmployee({ leaves }: Props) {
       <table className="w-full">
         <thead className="bg-white/5">
           <tr className="text-left">
+            <th className="p-4">Employee</th>
             <th className="p-4">Leave Type</th>
             <th className="p-4">Start Date</th>
             <th className="p-4">End Date</th>
             <th className="p-4">Reason</th>
             <th className="p-4">Status</th>
+            <th className="p-4">Konfirmasi</th>
           </tr>
         </thead>
 
         <tbody>
           {leaves.length === 0 ? (
             <tr>
-              <td colSpan={5} className="p-6 text-center text-zinc-400">
+              <td colSpan={6} className="p-6 text-center text-zinc-400">
                 No leave requests found
               </td>
             </tr>
           ) : (
             leaves.map((leave) => (
               <tr key={leave.id} className="border-t border-white/10">
-                <td className="p-4">{leave.leaveType}</td>
+                <td className="p-4">{leave.employeeName}</td>
 
+                <td className="p-4">{leave.leaveType}</td>
                 <td className="p-4">
                   {new Date(leave.startDate).toLocaleDateString()}
                 </td>
-
                 <td className="p-4">
                   {new Date(leave.endDate).toLocaleDateString()}
                 </td>
-
                 <td className="p-4">{leave.reason}</td>
-
                 <td className="p-4">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
@@ -68,6 +79,26 @@ export default function LeaveTableEmployee({ leaves }: Props) {
                   >
                     {leave.status}
                   </span>
+                </td>
+
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdate(leave.id, "APPROVED")}
+                      className="rounded bg-green-500 px-3 py-1 text-sm text-white"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUpdate(leave.id, "REJECTED")}
+                      className="rounded bg-red-500 px-3 py-1 text-sm text-white"
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

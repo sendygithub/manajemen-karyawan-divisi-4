@@ -1,4 +1,5 @@
 import { LeaveForm } from "@/types/type.leave";
+import { prisma } from "lib/prisma";
 
 export async function createLeave(data: LeaveForm) {
   const response = await fetch("/api/leave", {
@@ -21,13 +22,12 @@ export async function createLeave(data: LeaveForm) {
 }
 
 export async function getLeaves() {
-  const response = await fetch("/api/leave");
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed get leaves");
-  }
-
-  return result;
+  return prisma.leave.findMany({
+    include: {
+      employee: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }

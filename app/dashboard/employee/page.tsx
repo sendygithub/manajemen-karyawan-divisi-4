@@ -5,8 +5,20 @@ import { toast } from "sonner";
 import { Attendance } from "@/types/type.attendance";
 import { useEffect, useState } from "react";
 import { Session } from "next-auth";
+import LeaveDialog from "@/components/leave/LeaveDialog";
+import { createLeave, getLeaves } from "service/leave.service";
+
+type LeaveForm = {
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+};
 
 export default function EmployeeDashboardPage() {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [leaves, setLeaves] = useState([]);
   const [todayStatus, setTodayStatus] = useState("Not Checked In");
 
   const [checkInTime, setCheckInTime] = useState("");
@@ -74,6 +86,49 @@ export default function EmployeeDashboardPage() {
     }
   }
 
+  const [form, setForm] = useState({
+    leaveType: "",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  });
+  function handleChange(
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  async function fetchLeave() {
+    const response = await fetch("/api/leave");
+    const data = await response.json();
+
+    setLeaves(data);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    setIsLoading(true);
+    await createLeave({ ...form, employeeId: "1" });
+    toast.success("Leave request submitted successfully");
+    // tutup dialog
+    setOpen(false);
+    // REFRESH TABLE
+    await fetchLeave();
+
+    setForm({
+      leaveType: "",
+      startDate: "",
+      endDate: "",
+      reason: "",
+    });
+  }
+
   return (
     <div className="space-y-6">
       {/* HEADER */}
@@ -123,9 +178,20 @@ export default function EmployeeDashboardPage() {
             Check Out
           </button>
 
-          <button className="rounded-xl bg-white text-black px-5 py-3 font-medium hover:bg-zinc-200 transition">
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-xl bg-white text-black px-5 py-3 font-medium hover:bg-zinc-200 transition"
+          >
             Request Leave
           </button>
+          <LeaveDialog
+            open={open}
+            setOpen={setOpen}
+            form={form}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 
