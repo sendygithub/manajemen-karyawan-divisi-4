@@ -13,6 +13,8 @@ export default function EmployeeAttendanceTable({
         return "bg-yellow-500/20 text-yellow-400";
       case "ABSENT":
         return "bg-red-500/20 text-red-400";
+      case "LEAVE": // ✅ Tambah dari enum schema
+        return "bg-blue-500/20 text-blue-400";
       default:
         return "bg-zinc-500/20 text-zinc-400";
     }
@@ -26,6 +28,7 @@ export default function EmployeeAttendanceTable({
             <th className="p-4">Check In</th>
             <th className="p-4">Check Out</th>
             <th className="p-4">Status</th>
+            <th className="p-4">Recorded At</th>
           </tr>
         </thead>
 
@@ -61,12 +64,22 @@ export default function EmployeeAttendanceTable({
                   {attendance.status}
                 </span>
               </td>
+
+              <td className="p-4 text-zinc-400 text-sm">
+                {new Date(attendance.createdAt).toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </td>
             </tr>
           ))}
 
           {attendanceData.length === 0 && (
             <tr>
-              <td colSpan={4} className="text-center p-8 text-zinc-400">
+              <td colSpan={5} className="text-center p-8 text-zinc-400">
                 No attendance history
               </td>
             </tr>

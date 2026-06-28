@@ -5,6 +5,7 @@ import {
   CalendarX2,
   Building2,
   Settings,
+  Wallet,
 } from "lucide-react";
 
 export const adminMenus = [
@@ -26,6 +27,11 @@ export const adminMenus = [
   {
     icon: CalendarX2,
     href: "/dashboard/admin/leave",
+  },
+
+  {
+    icon: Wallet,
+    href: "/dashboard/admin/payroll",
   },
 
   {

@@ -4,4 +4,5 @@ export type Attendance = {
   checkIn: Date | null;
   checkOut: Date | null;
   status: string;
+  createdAt: Date | string;
 };

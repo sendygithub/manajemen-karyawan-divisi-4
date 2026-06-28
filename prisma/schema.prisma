@@ -43,6 +43,7 @@ model Employee {
   leaves       Leave[]
 
   attendance Attendance[]
+  payrolls   Payroll[]
 
   createdAt    DateTime @default(now())
 }
@@ -87,7 +88,7 @@ enum LeaveType {
 enum LeaveStatus {
   PENDING
   APPROVED
-  REJECTED
+REJECTED
 }
 
 
@@ -112,4 +113,36 @@ enum AttendanceStatus {
   LATE
   ABSENT
   LEAVE
+}
+
+enum PayrollStatus {
+  PENDING
+  PAID
+}
+
+model Payroll {
+  id            String        @id @default(cuid())
+  employeeId    String
+  employee      Employee      @relation(fields: [employeeId], references: [id])
+
+  month         Int
+  year          Int
+
+  baseSalary    Float
+  allowance     Float         @default(0)
+  deduction     Float         @default(0)
+  bonus         Float         @default(0)
+  totalSalary   Float
+
+  status        PayrollStatus @default(PENDING)
+  paidAt        DateTime?
+  notes         String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@index([month, year])
+  @@index([status])
+  @@index([employeeId])
 }
