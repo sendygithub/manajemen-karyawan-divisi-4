@@ -150,14 +150,20 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const departmentId = searchParams.get("departmentId");
+
     // =========================
     // MENGAMBIL SELURUH DATA EMPLOYEE
     // Beserta data User dan Department
     // yang berelasi
     // =========================
+    const where = departmentId ? { departmentId } : {};
+
     const employees = await prisma.employee.findMany({
+      where,
       include: {
         department: true,
         user: true,
