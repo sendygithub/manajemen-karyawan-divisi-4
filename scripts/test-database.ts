@@ -1,5 +1,5 @@
 import "dotenv/config"; // ✅ CRITICAL: Load environment variables
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 
 async function testDatabase() {
   console.log("🔍 Testing Prisma Postgres connection...\n");
@@ -14,6 +14,7 @@ async function testDatabase() {
       data: {
         email: "demo@example.com",
         name: "Demo User",
+        password: "password123",
       },
     });
     console.log("✅ Created user:", newUser);

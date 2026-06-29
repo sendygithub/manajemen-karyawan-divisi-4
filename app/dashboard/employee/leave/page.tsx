@@ -14,28 +14,31 @@ export default function EmployeeLeavePage() {
 
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
     {
-      id: 1,
+      id: "1",
+      employeeName: "Ahmad Fauzi",
       leaveType: "Annual Leave",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
       reason: "Family vacation",
-      status: "Approved",
+      status: "APPROVED",
     },
     {
-      id: 2,
+      id: "2",
+      employeeName: "Dewi Sartika",
       leaveType: "Sick Leave",
       startDate: "2026-06-02",
       endDate: "2026-06-03",
       reason: "Fever",
-      status: "Rejected",
+      status: "REJECTED",
     },
     {
-      id: 3,
+      id: "3",
+      employeeName: "Rudi Hartono",
       leaveType: "Personal Leave",
       startDate: "2026-06-20",
       endDate: "2026-06-21",
       reason: "Personal matters",
-      status: "Pending",
+      status: "PENDING",
     },
   ]);
   const [form, setForm] = useState({
@@ -130,7 +133,7 @@ export default function EmployeeLeavePage() {
           <p className="text-zinc-400 text-sm">Approved</p>
 
           <h2 className="text-3xl font-bold mt-2 text-green-400">
-            {leaveRequests.filter((item) => item.status === "Approved").length}
+            {leaveRequests.filter((item) => item.status === "APPROVED").length}
           </h2>
         </div>
 
@@ -138,7 +141,7 @@ export default function EmployeeLeavePage() {
           <p className="text-zinc-400 text-sm">Pending</p>
 
           <h2 className="text-3xl font-bold mt-2 text-yellow-400">
-            {leaveRequests.filter((item) => item.status === "Pending").length}
+            {leaveRequests.filter((item) => item.status === "PENDING").length}
           </h2>
         </div>
       </div>

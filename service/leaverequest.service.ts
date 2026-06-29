@@ -4,28 +4,31 @@ import { toast } from "sonner";
 
 const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
   {
-    id: 1,
+    id: "1",
+    employeeName: "Ahmad Fauzi",
     leaveType: "Annual Leave",
     startDate: "2026-06-10",
     endDate: "2026-06-12",
     reason: "Family vacation",
-    status: "Approved",
+    status: "APPROVED",
   },
   {
-    id: 2,
+    id: "2",
+    employeeName: "Dewi Sartika",
     leaveType: "Sick Leave",
     startDate: "2026-06-02",
     endDate: "2026-06-03",
     reason: "Fever",
-    status: "Rejected",
+    status: "REJECTED",
   },
   {
-    id: 3,
+    id: "3",
+    employeeName: "Rudi Hartono",
     leaveType: "Personal Leave",
     startDate: "2026-06-20",
     endDate: "2026-06-21",
     reason: "Personal matters",
-    status: "Pending",
+    status: "PENDING",
   },
 ]);
 export async function createLeave(data: {
