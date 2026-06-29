@@ -23,8 +23,6 @@ export async function createEmployee(data: {
   return result.data;
 }
 
-// service/employee.service.ts
-
 export async function getEmployees() {
   const response = await fetch("/api/employee");
 
@@ -33,4 +31,37 @@ export async function getEmployees() {
   }
 
   return response.json();
+}
+
+export async function updateEmployee(
+  id: string,
+  data: { name: string; position: string; departmentId: string },
+) {
+  const response = await fetch(`/api/employee/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed update employee");
+  }
+
+  return result.data;
+}
+
+export async function deleteEmployee(id: string) {
+  const response = await fetch(`/api/employee/${id}`, {
+    method: "DELETE",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed delete employee");
+  }
+
+  return result;
 }
