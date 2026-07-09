@@ -147,6 +147,29 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    // Jika role ADMIN, HR, atau MANAGER, tampilkan semua data leave
+    if (
+      session.user.role === "ADMIN" ||
+      session.user.role === "HR" ||
+      session.user.role === "MANAGER"
+    ) {
+      const leaves = await prisma.leave.findMany({
+        include: {
+          employee: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return NextResponse.json(leaves);
+    }
+
+    // Jika role EMPLOYEE, tampilkan hanya data leave miliknya sendiri
     const employee = await prisma.employee.findUnique({
       where: {
         userId: session.user.id,

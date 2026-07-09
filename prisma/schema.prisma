@@ -76,6 +76,8 @@ model Leave {
 
 enum Role {
   ADMIN
+  HR
+  MANAGER
   EMPLOYEE
 }
 
@@ -88,7 +90,7 @@ enum LeaveType {
 enum LeaveStatus {
   PENDING
   APPROVED
-REJECTED
+  REJECTED
 }
 
 

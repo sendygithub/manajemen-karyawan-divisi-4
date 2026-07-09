@@ -6,11 +6,34 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { getSession } from "next-auth/react";
 
+const QUICK_LOGIN = [
+  {
+    label: "Admin",
+    email: "admin@company.com",
+    password: "admin123",
+    role: "ADMIN",
+  },
+  { label: "HR", email: "hr@company.com", password: "hr123", role: "HR" },
+  {
+    label: "Manager",
+    email: "manager@company.com",
+    password: "manager123",
+    role: "MANAGER",
+  },
+  {
+    label: "Employee",
+    email: "ahmad@company.com",
+    password: "employee123",
+    role: "EMPLOYEE",
+  },
+];
+
 export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState<string | null>(null);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -31,9 +54,43 @@ export default function LoginPage() {
 
     if (session?.user.role === "ADMIN") {
       router.push("/dashboard/admin");
+    } else if (session?.user.role === "HR") {
+      router.push("/dashboard/hr");
+    } else if (session?.user.role === "MANAGER") {
+      router.push("/dashboard/manager");
+    } else if (session?.user.role === "EMPLOYEE") {
+      router.push("/dashboard/employee");
+    }
+  }
+
+  async function handleQuickLogin(
+    email: string,
+    password: string,
+    label: string,
+  ) {
+    setLoading(label);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      alert("Quick login failed");
+      setLoading(null);
+      return;
     }
 
-    if (session?.user.role === "EMPLOYEE") {
+    const session = await getSession();
+
+    if (session?.user.role === "ADMIN") {
+      router.push("/dashboard/admin");
+    } else if (session?.user.role === "HR") {
+      router.push("/dashboard/hr");
+    } else if (session?.user.role === "MANAGER") {
+      router.push("/dashboard/manager");
+    } else if (session?.user.role === "EMPLOYEE") {
       router.push("/dashboard/employee");
     }
   }
@@ -156,9 +213,64 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* QUICK LOGIN */}
+          <div className="mt-8">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                Quick Login
+              </span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {QUICK_LOGIN.map((item) => (
+                <button
+                  key={item.role}
+                  type="button"
+                  disabled={loading === item.label}
+                  onClick={() =>
+                    handleQuickLogin(item.email, item.password, item.label)
+                  }
+                  className="
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-white/[0.03]
+                    px-3
+                    py-2.5
+                    text-xs
+                    font-medium
+                    text-zinc-400
+                    transition
+                    hover:border-white/20
+                    hover:bg-white/[0.06]
+                    hover:text-white
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                  "
+                >
+                  {loading === item.label ? (
+                    <span className="flex items-center justify-center gap-1.5">
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent" />
+                      Signing in...
+                    </span>
+                  ) : (
+                    <>
+                      <span className="block text-[10px] uppercase tracking-wider text-zinc-600">
+                        {item.role}
+                      </span>
+                      <span className="block">{item.label}</span>
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* FOOTER */}
-          <p className="mt-8 text-center text-sm text-zinc-500">
-            Don&apos;t have an account?{" "}
+          <p className="mt-6 text-center text-sm text-zinc-500">
+            Don't have an account?{" "}
             <Link
               href="/register"
               className="

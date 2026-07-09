@@ -7,7 +7,8 @@ import { LogOut } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 import { adminMenus } from "./SideBarAdmin";
-
+import { hrMenus } from "./SideBarHR";
+import { managerMenus } from "./SideBarManager";
 import { employeeMenus } from "./SideBarEmployee";
 
 export default function Sidebar() {
@@ -15,7 +16,16 @@ export default function Sidebar() {
 
   const role = session?.user?.role;
 
-  const menus = role === "ADMIN" ? adminMenus : employeeMenus;
+  let menus;
+  if (role === "ADMIN") {
+    menus = adminMenus;
+  } else if (role === "HR") {
+    menus = hrMenus;
+  } else if (role === "MANAGER") {
+    menus = managerMenus;
+  } else {
+    menus = employeeMenus;
+  }
 
   return (
     <aside

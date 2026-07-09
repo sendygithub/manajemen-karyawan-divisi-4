@@ -1,9 +1,15 @@
 import { Attendance } from "@/types/type.attendance";
 
+type AttendanceWithEmployee = Attendance & {
+  employee?: {
+    name: string;
+  };
+};
+
 export default function EmployeeAttendanceTable({
   attendanceData,
 }: {
-  attendanceData: Attendance[];
+  attendanceData: AttendanceWithEmployee[];
 }) {
   function getStatusColor(status: string) {
     switch (status) {
@@ -13,17 +19,22 @@ export default function EmployeeAttendanceTable({
         return "bg-yellow-500/20 text-yellow-400";
       case "ABSENT":
         return "bg-red-500/20 text-red-400";
-      case "LEAVE": // ✅ Tambah dari enum schema
+      case "LEAVE":
         return "bg-blue-500/20 text-blue-400";
       default:
         return "bg-zinc-500/20 text-zinc-400";
     }
   }
+
+  // Cek apakah data memiliki employee name (untuk HR/Admin view)
+  const hasEmployeeName = attendanceData.some((a) => a.employee?.name);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
       <table className="w-full">
         <thead className="bg-white/5">
           <tr className="text-left">
+            {hasEmployeeName && <th className="p-4">Employee</th>}
             <th className="p-4">Date</th>
             <th className="p-4">Check In</th>
             <th className="p-4">Check Out</th>
@@ -35,6 +46,11 @@ export default function EmployeeAttendanceTable({
         <tbody>
           {attendanceData.map((attendance) => (
             <tr key={attendance.id} className="border-t border-white/10">
+              {hasEmployeeName && (
+                <td className="p-4 font-medium">
+                  {attendance.employee?.name || "-"}
+                </td>
+              )}
               <td className="p-4">
                 {new Date(attendance.date).toLocaleDateString("id-ID")}
               </td>
@@ -79,7 +95,10 @@ export default function EmployeeAttendanceTable({
 
           {attendanceData.length === 0 && (
             <tr>
-              <td colSpan={5} className="text-center p-8 text-zinc-400">
+              <td
+                colSpan={hasEmployeeName ? 6 : 5}
+                className="text-center p-8 text-zinc-400"
+              >
                 No attendance history
               </td>
             </tr>

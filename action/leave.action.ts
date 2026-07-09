@@ -13,4 +13,8 @@ export async function updateLeaveStatus(
   });
 
   revalidatePath("/leave");
+  revalidatePath("/dashboard/admin/leave");
+  revalidatePath("/dashboard/hr/leave");
+  revalidatePath("/dashboard/manager/leave");
+  revalidatePath("/dashboard/employee/leave");
 }

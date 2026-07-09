@@ -1,4 +1,5 @@
 import { prisma } from "lib/prisma";
+
 export async function getAttendanceByEmployee(userId: string) {
   console.log("1. userId masuk:", userId);
 
@@ -6,7 +7,7 @@ export async function getAttendanceByEmployee(userId: string) {
     where: { userId },
   });
 
-  console.log("2. employee ditemukan:", employee); // ✅ null berarti belum ada Employee untuk user ini
+  console.log("2. employee ditemukan:", employee);
 
   if (!employee) return [];
 
@@ -18,5 +19,20 @@ export async function getAttendanceByEmployee(userId: string) {
   });
 
   console.log("4. attendance count:", data.length);
+  return data;
+}
+
+export async function getAllAttendance() {
+  const data = await prisma.attendance.findMany({
+    include: {
+      employee: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: { date: "desc" },
+  });
+
   return data;
 }
