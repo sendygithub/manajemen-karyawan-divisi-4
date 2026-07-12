@@ -8,23 +8,7 @@ import { getDepartments } from "service/department.service";
 import { toast } from "sonner"; // Opsional: gunakan sonner jika sudah diinstall
 import { getUsers } from "service/user.service";
 import { getEmployees } from "service/employee.service";
-
-type EmployeeData = {
-  userId: string; // Tambahkan userId untuk mencocokkan dengan form
-  id: string;
-  name: string;
-  email: string;
-  position: string;
-  department: {
-    name: string;
-  };
-};
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-};
+import { EmployeeData, User } from "@/types/type.employee";
 
 export default function EmployeesPage() {
   const [open, setOpen] = useState(false);

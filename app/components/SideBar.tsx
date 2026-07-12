@@ -64,11 +64,10 @@ export default function Sidebar() {
           const Icon = menu.icon;
 
           return (
-            <Link
-              key={index}
-              href={menu.href}
-              className="
-                  group
+            <div key={index} className="relative group">
+              <Link
+                href={menu.href}
+                className="
                   flex
                   h-12
                   w-12
@@ -80,9 +79,35 @@ export default function Sidebar() {
                   hover:bg-white
                   hover:text-black
                 "
-            >
-              <Icon size={22} />
-            </Link>
+              >
+                <Icon size={22} />
+              </Link>
+              {/* TOOLTIP */}
+              <div
+                className="
+                absolute left-full ml-3 top-1/2 -translate-y-1/2
+                px-3 py-1.5 rounded-lg bg-zinc-800 text-white text-xs font-medium
+                whitespace-nowrap
+                opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                transition-all duration-200
+                pointer-events-none
+                z-50
+                shadow-lg
+              "
+              >
+                {menu.label}
+                {/* Arrow */}
+                <div
+                  className="
+                  absolute right-full top-1/2 -translate-y-1/2
+                  w-0 h-0
+                  border-t-[6px] border-t-transparent
+                  border-b-[6px] border-b-transparent
+                  border-r-[6px] border-r-zinc-800
+                "
+                />
+              </div>
+            </div>
           );
         })}
       </nav>

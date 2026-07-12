@@ -1,25 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import DepartmentTable from "@/components/department/DepartmentTable";
 import DepartmentDialog from "@/components/department/DepartmentDialog";
-import { createDepartment } from "service/department.service";
-
-type DepartmentWithEmployees = {
-  id: string;
-  name: string;
-  jobdesk: string;
-  plant: string;
-  createdAt?: Date;
-  employees: { id: string; name: string; position: string }[];
-  _count: { employees: number };
-};
+import { createDepartment, getDepartments } from "service/department.service";
 
 export default function DepartmentsPage() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [departments, setDepartments] = useState<DepartmentWithEmployees[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
 
   const [form, setForm] = useState({
@@ -28,42 +18,22 @@ export default function DepartmentsPage() {
     jobdesk: "",
   });
 
-  const fetchDepartments = useCallback(async () => {
+  async function loadDepartments() {
     try {
       setFetching(true);
-      const res = await fetch("/api/department");
-      const data = await res.json();
-      // Fetch employees per department
-      const deptsWithEmployees = await Promise.all(
-        data.map(async (dept: any) => {
-          const empRes = await fetch(`/api/employee?departmentId=${dept.id}`);
-          const empData = await empRes.json();
-          const employees = Array.isArray(empData)
-            ? empData.map((e: any) => ({
-                id: e.id,
-                name: e.name,
-                position: e.position,
-              }))
-            : [];
-          return {
-            ...dept,
-            employees,
-            _count: { employees: employees.length },
-          };
-        }),
-      );
-      setDepartments(deptsWithEmployees);
+      const data = await getDepartments();
+      setDepartments(data);
     } catch (error) {
-      console.error(error);
+      console.log(error);
       toast.error("Gagal memuat data department");
     } finally {
       setFetching(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
+    loadDepartments();
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({
@@ -80,7 +50,7 @@ export default function DepartmentsPage() {
       toast.success("Department berhasil ditambahkan!");
       setForm({ name: "", plant: "", jobdesk: "" });
       setOpen(false);
-      fetchDepartments();
+      loadDepartments();
     } catch (error) {
       console.log(error);
       toast.error("Gagal menambahkan department");
@@ -151,7 +121,7 @@ export default function DepartmentsPage() {
       ) : (
         <DepartmentTable
           departments={departments}
-          onRefresh={fetchDepartments}
+          onRefresh={loadDepartments}
         />
       )}
 

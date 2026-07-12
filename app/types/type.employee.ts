@@ -25,3 +25,30 @@ export type EmployeeDialogProps = {
 
   departments: Department[];
 };
+
+export type DepartmentWithEmployees = {
+  id: string;
+  name: string;
+  jobdesk: string;
+  plant: string;
+  createdAt?: Date;
+  employees: { id: string; name: string; position: string }[];
+  _count: { employees: number };
+};
+
+export type EmployeeData = {
+  userId: string; // Tambahkan userId untuk mencocokkan dengan form
+  id: string;
+  name: string;
+  email: string;
+  position: string;
+  department: {
+    name: string;
+  };
+};
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+};
