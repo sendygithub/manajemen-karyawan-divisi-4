@@ -44,6 +44,8 @@ model Employee {
 
   attendance Attendance[]
   payrolls   Payroll[]
+  laporans   Laporan[]
+  ejos       Ejo[]
 
   createdAt    DateTime @default(now())
 }
@@ -146,5 +148,55 @@ model Payroll {
   @@unique([employeeId, month, year])
   @@index([month, year])
   @@index([status])
+  @@index([employeeId])
+}
+
+model Ejo {
+  id              String   @id @default(cuid())
+  nomorEjo        Int      @default(autoincrement())
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+
+  divisi          Int
+  department      String
+  nomorMesin      Int
+  grub            String
+  jenisKerusakan  String
+  jenisPerbaikan  String   // "MEKANIK" or "ELEKTRIK"
+  jamKerusakan    DateTime
+  namaPart        String
+  picOperator     String
+
+  status          String   @default("MENUNGGU_KONFIRMASI")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([employeeId])
+  @@unique([nomorEjo])
+}
+
+model Laporan {
+  id              String   @id @default(cuid())
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+
+  alatUkurMeter   String
+  alatUkurBusur   String
+  inputAPB        Float
+  noSpek          String
+  sudut           Float
+  lebar           Float
+  kodeTreatment   String
+  tanggalProduksi DateTime
+  expire          DateTime
+  lebarAktual     Float
+  sudutAktual     Float
+  jumlahRoll      Int
+  meter           Float
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   @@index([employeeId])
 }

@@ -3,6 +3,8 @@ import {
   ClipboardCheck,
   CalendarDays,
   User,
+  FileText,
+  Wrench,
 } from "lucide-react";
 
 export const employeeMenus = [
@@ -22,6 +24,18 @@ export const employeeMenus = [
     icon: CalendarDays,
     href: "/dashboard/employee/leave",
     label: "Leave",
+  },
+
+  {
+    icon: FileText,
+    href: "/dashboard/employee/report",
+    label: "Input Laporan",
+  },
+
+  {
+    icon: Wrench,
+    href: "/dashboard/employee/ejo",
+    label: "E-Job Order",
   },
 
   {

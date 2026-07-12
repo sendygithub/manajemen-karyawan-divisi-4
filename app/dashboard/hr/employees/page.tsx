@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import EmployeeTable from "@/components/employee/EmployeeTable";
 
+export const dynamic = "force-dynamic";
+
 export default function HREmployeesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();

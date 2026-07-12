@@ -7,6 +7,8 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   // Clean existing data
+  await prisma.ejo.deleteMany();
+  await prisma.laporan.deleteMany();
   await prisma.payroll.deleteMany();
   await prisma.attendance.deleteMany();
   await prisma.leave.deleteMany();
@@ -412,6 +414,118 @@ async function main() {
   }
 
   console.log(`✅ Created ${payrollCount} payroll records`);
+
+  // ──────────────────────────────────────────────
+  // Create Laporan (Dummy Data)
+  // ──────────────────────────────────────────────
+  const laporanData = [
+    {
+      employeeId: "emp-001",
+      alatUkurMeter: "Mitutoyo 500-196-30",
+      alatUkurBusur: "Mitutoyo 187-907",
+      inputAPB: 150.5,
+      noSpek: "SPK-2026-001",
+      sudut: 90,
+      lebar: 1200,
+      kodeTreatment: "TREAT-A1",
+      tanggalProduksi: new Date("2026-07-01"),
+      expire: new Date("2027-07-01"),
+      lebarAktual: 1198.5,
+      sudutAktual: 89.8,
+      jumlahRoll: 5,
+      meter: 250,
+    },
+    {
+      employeeId: "emp-002",
+      alatUkurMeter: "INSIZE 1112-300",
+      alatUkurBusur: "INSIZE 2212-90",
+      inputAPB: 200.0,
+      noSpek: "SPK-2026-002",
+      sudut: 45,
+      lebar: 900,
+      kodeTreatment: "TREAT-B2",
+      tanggalProduksi: new Date("2026-07-02"),
+      expire: new Date("2027-07-02"),
+      lebarAktual: 899.2,
+      sudutAktual: 44.9,
+      jumlahRoll: 3,
+      meter: 180,
+    },
+    {
+      employeeId: "emp-003",
+      alatUkurMeter: "Mitutoyo 500-196-30",
+      alatUkurBusur: "Mitutoyo 187-907",
+      inputAPB: 175.8,
+      noSpek: "SPK-2026-003",
+      sudut: 60,
+      lebar: 1500,
+      kodeTreatment: "TREAT-C3",
+      tanggalProduksi: new Date("2026-07-03"),
+      expire: new Date("2027-07-03"),
+      lebarAktual: 1499.0,
+      sudutAktual: 60.1,
+      jumlahRoll: 8,
+      meter: 400,
+    },
+  ];
+
+  for (const laporan of laporanData) {
+    await prisma.laporan.create({
+      data: laporan,
+    });
+  }
+
+  console.log(`✅ Created ${laporanData.length} laporan records`);
+
+  // ──────────────────────────────────────────────
+  // Create EJO (Dummy Data)
+  // ──────────────────────────────────────────────
+  const ejoData = [
+    {
+      employeeId: "emp-001",
+      divisi: 1,
+      department: "Production",
+      nomorMesin: 101,
+      grub: "A",
+      jenisKerusakan: "Bearing rusak",
+      jenisPerbaikan: "MEKANIK",
+      jamKerusakan: new Date("2026-07-10T08:30:00"),
+      namaPart: "Bearing SKF 6205",
+      picOperator: "Ahmad Fauzi",
+    },
+    {
+      employeeId: "emp-002",
+      divisi: 2,
+      department: "Maintenance",
+      nomorMesin: 205,
+      grub: "B",
+      jenisKerusakan: "Kabel putus",
+      jenisPerbaikan: "ELEKTRIK",
+      jamKerusakan: new Date("2026-07-11T14:15:00"),
+      namaPart: "Kabel NYY 4x2.5mm",
+      picOperator: "Siti Nurhaliza",
+    },
+    {
+      employeeId: "emp-003",
+      divisi: 1,
+      department: "Production",
+      nomorMesin: 108,
+      grub: "A",
+      jenisKerusakan: "Seal bocor",
+      jenisPerbaikan: "MEKANIK",
+      jamKerusakan: new Date("2026-07-12T10:00:00"),
+      namaPart: "Oil Seal TC 35x55x8",
+      picOperator: "Budi Santoso",
+    },
+  ];
+
+  for (const ejo of ejoData) {
+    await prisma.ejo.create({
+      data: ejo,
+    });
+  }
+
+  console.log(`✅ Created ${ejoData.length} ejo records`);
   console.log("🎉 Seeding completed successfully!");
   console.log("");
   console.log("📋 Daftar Akun:");

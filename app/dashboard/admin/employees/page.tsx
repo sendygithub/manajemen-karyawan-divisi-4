@@ -5,46 +5,32 @@ import EmployeeTable from "@/components/employee/EmployeeTable";
 import EmployeeDialog from "@/components/employee/EmployeeDialog";
 import { Department } from "@/types/type.department";
 import { getDepartments } from "service/department.service";
-import { toast } from "sonner"; // Opsional: gunakan sonner jika sudah diinstall
 import { getUsers } from "service/user.service";
 import { getEmployees } from "service/employee.service";
-import { EmployeeData, User } from "@/types/type.employee";
+import { User } from "@/types/type.employee";
 
 export default function EmployeesPage() {
   const [open, setOpen] = useState(false);
-
   const [users, setUsers] = useState<User[]>([]);
-
-  const [employees, setEmployees] = useState<EmployeeData[]>([]);
-
+  const [employees, setEmployees] = useState<any[]>([]);
   const [form, setForm] = useState({
     userId: "",
     name: "",
     position: "",
     departmentId: "",
   });
-
   const [departments, setDepartments] = useState<Department[]>([]);
+
   async function fetchEmployees() {
     try {
       const data = await getEmployees();
-
       setEmployees(data);
     } catch (error) {
       console.log(error);
     }
   }
+
   useEffect(() => {
-    async function fetchEmployees() {
-      try {
-        const data = await getEmployees();
-
-        setEmployees(data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
     fetchEmployees();
   }, []);
 
@@ -57,22 +43,15 @@ export default function EmployeesPage() {
         console.error("Gagal mengambil data departemen:", error);
       }
     }
-
     fetchDepartment();
   }, []);
 
   useEffect(() => {
     async function fetchUsers() {
       const data = await getUsers();
-
       setUsers(data);
     }
-
     fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    fetchEmployees();
   }, []);
 
   function handleChange(
