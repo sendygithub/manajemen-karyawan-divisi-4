@@ -58,6 +58,14 @@ async function main() {
         plant: "Bandung",
       },
     }),
+    prisma.department.create({
+      data: {
+        id: "dept-eng",
+        name: "Engineering",
+        jobdesk: "Mengelola perbaikan dan pemeliharaan mesin produksi",
+        plant: "Jakarta",
+      },
+    }),
   ]);
 
   console.log(`✅ Created ${departments.length} departments`);
@@ -136,6 +144,38 @@ async function main() {
     },
   });
   console.log(`✅ Manager user created: manager@company.com / manager123`);
+
+  // ──────────────────────────────────────────────
+  // 3b. ENGINEERING ADMIN USER
+  // ──────────────────────────────────────────────
+  const engineeringPassword = await bcrypt.hash("engineering123", 10);
+  const engineeringUser = await prisma.user.create({
+    data: {
+      id: "user-engineering",
+      email: "engineering@company.com",
+      password: engineeringPassword,
+      name: "Teknisi Engineering",
+      role: "ADMIN",
+    },
+  });
+
+  await prisma.employee.create({
+    data: {
+      id: "emp-eng-001",
+      name: "Teknisi Engineering",
+      position: "Engineering Supervisor",
+      phone: "081234567888",
+      gender: "MALE",
+      joinDate: new Date("2022-01-01"),
+      bankName: "BCA",
+      bankAccount: "1234567888",
+      userId: engineeringUser.id,
+      departmentId: "dept-eng",
+    },
+  });
+  console.log(
+    `✅ Engineering user created: engineering@company.com / engineering123`,
+  );
 
   // ──────────────────────────────────────────────
   // 4. EMPLOYEE USERS
@@ -529,18 +569,20 @@ async function main() {
   console.log("🎉 Seeding completed successfully!");
   console.log("");
   console.log("📋 Daftar Akun:");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(" ADMIN   : admin@company.com   / admin123");
-  console.log(" HR      : hr@company.com      / hr123");
-  console.log(" MANAGER : manager@company.com / manager123");
-  console.log(" EMPLOYEE: ahmad@company.com   / employee123");
-  console.log("           (dan employee lainnya)");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(" ADMIN       : admin@company.com         / admin123");
+  console.log(" HR          : hr@company.com            / hr123");
+  console.log(" MANAGER     : manager@company.com       / manager123");
+  console.log(" ENGINEERING : engineering@company.com   / engineering123");
+  console.log(" EMPLOYEE    : ahmad@company.com         / employee123");
+  console.log("               (dan employee lainnya)");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("");
   console.log("📋 Hak Akses:");
   console.log(" ADMIN   -> Semua fitur");
   console.log(" HR      -> Employee, Attendance, Leave");
   console.log(" MANAGER -> Approve Leave");
+  console.log(" ENGINEERING -> EJO Management");
   console.log(" EMPLOYEE-> Lihat data sendiri");
 }
 

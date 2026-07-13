@@ -21,6 +21,12 @@ const QUICK_LOGIN = [
     role: "MANAGER",
   },
   {
+    label: "Engineering",
+    email: "engineering@company.com",
+    password: "engineering123",
+    role: "ENGINEERING",
+  },
+  {
     label: "Employee",
     email: "ahmad@company.com",
     password: "employee123",
@@ -52,7 +58,9 @@ export default function LoginPage() {
 
     const session = await getSession();
 
-    if (session?.user.role === "ADMIN") {
+    if (session?.user.email === "engineering@company.com") {
+      router.push("/dashboard/engineering");
+    } else if (session?.user.role === "ADMIN") {
       router.push("/dashboard/admin");
     } else if (session?.user.role === "HR") {
       router.push("/dashboard/hr");
@@ -84,7 +92,9 @@ export default function LoginPage() {
 
     const session = await getSession();
 
-    if (session?.user.role === "ADMIN") {
+    if (session?.user.email === "engineering@company.com") {
+      router.push("/dashboard/engineering");
+    } else if (session?.user.role === "ADMIN") {
       router.push("/dashboard/admin");
     } else if (session?.user.role === "HR") {
       router.push("/dashboard/hr");

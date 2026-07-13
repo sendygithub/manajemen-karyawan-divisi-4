@@ -52,3 +52,10 @@ export async function getEjosByEmployee(employeeId: string) {
     },
   });
 }
+
+export async function updateEjoStatus(id: string, status: string) {
+  return prisma.ejo.update({
+    where: { id },
+    data: { status },
+  });
+}

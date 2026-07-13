@@ -6,6 +6,7 @@ import {
   Building2,
   Settings,
   Wallet,
+  Wrench,
 } from "lucide-react";
 
 export const adminMenus = [
@@ -43,6 +44,12 @@ export const adminMenus = [
     icon: Building2,
     href: "/dashboard/admin/department",
     label: "Department",
+  },
+
+  {
+    icon: Wrench,
+    href: "/dashboard/engineering",
+    label: "Engineering",
   },
 
   {
