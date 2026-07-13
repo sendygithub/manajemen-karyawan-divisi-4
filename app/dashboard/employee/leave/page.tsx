@@ -1,21 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { createLeave, getLeaves } from "service/leave.service";
 import { toast, useSonner } from "sonner";
 import { LeaveRequest } from "@/types/type.leaverequest";
 import LeaveDialog from "@/components/leave/LeaveDialog";
-import LeaveTableEmployee from "@/components/leave/LeaveTable";
+import LeaveTableEmployee from "@/components/leave/LeaveTableEmployee";
 
 export default function EmployeeLeavePage() {
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [leaves, setLeaves] = useState([]);
 
+  const employeeName = session?.user?.name || "Employee";
+
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
     {
       id: "1",
-      employeeName: "Ahmad Fauzi",
+      employeeName: employeeName,
       leaveType: "Annual Leave",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -24,7 +28,7 @@ export default function EmployeeLeavePage() {
     },
     {
       id: "2",
-      employeeName: "Dewi Sartika",
+      employeeName: employeeName,
       leaveType: "Sick Leave",
       startDate: "2026-06-02",
       endDate: "2026-06-03",
@@ -33,7 +37,7 @@ export default function EmployeeLeavePage() {
     },
     {
       id: "3",
-      employeeName: "Rudi Hartono",
+      employeeName: employeeName,
       leaveType: "Personal Leave",
       startDate: "2026-06-20",
       endDate: "2026-06-21",
@@ -67,7 +71,12 @@ export default function EmployeeLeavePage() {
     const response = await fetch("/api/leave");
     const data = await response.json();
 
-    setLeaves(data);
+    const mapped = data.map((item: any) => ({
+      ...item,
+      employeeName: employeeName,
+    }));
+
+    setLeaves(mapped);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -94,7 +103,12 @@ export default function EmployeeLeavePage() {
 
     const data = await res.json();
 
-    setLeaves(data);
+    const mapped = data.map((item: any) => ({
+      ...item,
+      employeeName: employeeName,
+    }));
+
+    setLeaves(mapped);
   }
 
   useEffect(() => {

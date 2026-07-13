@@ -41,12 +41,6 @@ export const adminMenus = [
   },
 
   {
-    icon: Building2,
-    href: "/dashboard/admin/department",
-    label: "Department",
-  },
-
-  {
     icon: Wrench,
     href: "/dashboard/engineering",
     label: "Engineering",
