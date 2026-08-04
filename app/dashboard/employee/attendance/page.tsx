@@ -89,8 +89,8 @@ export default function EmployeeAttendancePage() {
 
       toast.success("Check In Successful");
       await fetchAttendanceHistory();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Check In gagal");
     }
   }
 
@@ -121,8 +121,8 @@ export default function EmployeeAttendancePage() {
 
       toast.success("Check Out Successful");
       await fetchAttendanceHistory();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Check Out gagal");
     }
   }
 

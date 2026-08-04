@@ -100,7 +100,7 @@ export default function EmployeeDialog({
                 >
                   <option value="">Select User</option>
 
-                  {users.map((user: any) => (
+                  {users.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.name} ({user.email})
                     </option>

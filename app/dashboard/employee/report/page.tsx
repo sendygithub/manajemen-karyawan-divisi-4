@@ -278,7 +278,7 @@ export default function EmployeeReportPage() {
                       size={40}
                       className="mx-auto mb-3 text-zinc-600"
                     />
-                    Belum ada laporan. Klik "Input Laporan" untuk menambahkan.
+                    Belum ada laporan. Klik &quot;Input Laporan&quot; untuk menambahkan.
                   </td>
                 </tr>
               ) : (

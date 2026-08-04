@@ -62,8 +62,8 @@ export default function DepartmentTable({ departments, onRefresh }: Props) {
       toast.success("Department berhasil diupdate!");
       setEditModal({ open: false, dept: null });
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || "Gagal update department");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal update department");
     } finally {
       setLoading(false);
     }
@@ -82,8 +82,8 @@ export default function DepartmentTable({ departments, onRefresh }: Props) {
       toast.success("Department berhasil dihapus!");
       setDeleteModal({ open: false, dept: null });
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || "Gagal hapus department");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal hapus department");
     } finally {
       setLoading(false);
     }

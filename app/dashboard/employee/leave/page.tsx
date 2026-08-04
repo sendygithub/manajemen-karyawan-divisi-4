@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { createLeave, getLeaves } from "service/leave.service";
+import { createLeave } from "service/leave.service";
 import { toast, useSonner } from "sonner";
 import { LeaveRequest } from "@/types/type.leaverequest";
 import LeaveDialog from "@/components/leave/LeaveDialog";
@@ -71,10 +71,19 @@ export default function EmployeeLeavePage() {
     const response = await fetch("/api/leave");
     const data = await response.json();
 
-    const mapped = data.map((item: any) => ({
-      ...item,
-      employeeName: employeeName,
-    }));
+    const mapped = data.map(
+      (item: {
+        id: string;
+        leaveType: string;
+        startDate: string;
+        endDate: string;
+        reason: string;
+        status: string;
+      }) => ({
+        ...item,
+        employeeName: employeeName,
+      }),
+    );
 
     setLeaves(mapped);
   }
@@ -83,7 +92,7 @@ export default function EmployeeLeavePage() {
     e.preventDefault();
 
     setIsLoading(true);
-    await createLeave({ ...form, employeeId: "1" });
+    await createLeave(form);
     toast.success("Leave request submitted successfully");
     // tutup dialog
     setOpen(false);
@@ -103,16 +112,28 @@ export default function EmployeeLeavePage() {
 
     const data = await res.json();
 
-    const mapped = data.map((item: any) => ({
-      ...item,
-      employeeName: employeeName,
-    }));
+    const mapped = data.map(
+      (item: {
+        id: string;
+        leaveType: string;
+        startDate: string;
+        endDate: string;
+        reason: string;
+        status: string;
+      }) => ({
+        ...item,
+        employeeName: employeeName,
+      }),
+    );
 
     setLeaves(mapped);
   }
 
   useEffect(() => {
-    fetchLeaves();
+    const run = async () => {
+      await fetchLeaves();
+    };
+    run();
   }, []);
 
   return (

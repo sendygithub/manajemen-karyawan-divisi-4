@@ -1,5 +1,13 @@
-import { LeaveForm } from "@/types/type.leave";
-import { prisma } from "lib/prisma";
+// Client fetcher untuk modul Leave.
+// CATATAN: file ini hanya boleh berisi kode yang aman dijalankan di browser.
+// Data diambil lewat API route (/api/leave), bukan Prisma langsung.
+
+export type LeaveForm = {
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+};
 
 export async function createLeave(data: LeaveForm) {
   const response = await fetch("/api/leave", {
@@ -22,12 +30,11 @@ export async function createLeave(data: LeaveForm) {
 }
 
 export async function getLeaves() {
-  return prisma.leave.findMany({
-    include: {
-      employee: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const response = await fetch("/api/leave");
+
+  if (!response.ok) {
+    throw new Error("Failed get leaves");
+  }
+
+  return response.json();
 }

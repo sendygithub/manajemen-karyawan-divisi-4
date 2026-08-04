@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import AuthInput from "@/components/AuthInput";
-const AnyAuthInput = AuthInput as any;
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

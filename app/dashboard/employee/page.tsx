@@ -6,7 +6,7 @@ import { Attendance } from "@/types/type.attendance";
 import { useEffect, useState } from "react";
 import { Session } from "next-auth";
 import LeaveDialog from "@/components/leave/LeaveDialog";
-import { createLeave, getLeaves } from "service/leave.service";
+import { createLeave } from "service/leave.service";
 
 type LeaveForm = {
   leaveType: string;
@@ -29,9 +29,6 @@ export default function EmployeeDashboardPage() {
 
   const [checkedOut, setCheckedOut] = useState(false);
   const [attendanceData, setAttendanceData] = useState<Attendance[]>([]);
-  useEffect(() => {
-    fetchAttendanceHistory();
-  }, []);
 
   async function fetchAttendanceHistory() {
     try {
@@ -72,6 +69,13 @@ export default function EmployeeDashboardPage() {
       console.log(error);
     }
   }
+
+  useEffect(() => {
+    const run = async () => {
+      await fetchAttendanceHistory();
+    };
+    run();
+  }, []);
 
   function getStatusStyle(status: string) {
     switch (status) {
@@ -114,7 +118,7 @@ export default function EmployeeDashboardPage() {
     e.preventDefault();
 
     setIsLoading(true);
-    await createLeave({ ...form, employeeId: "1" });
+    await createLeave(form);
     toast.success("Leave request submitted successfully");
     // tutup dialog
     setOpen(false);

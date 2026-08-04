@@ -189,7 +189,7 @@ export default function EmployeeEjoPage() {
                       size={40}
                       className="mx-auto mb-3 text-zinc-600"
                     />
-                    Belum ada EJO. Klik "Input EJO" untuk menambahkan.
+                    Belum ada EJO. Klik &quot;Input EJO&quot; untuk menambahkan.
                   </td>
                 </tr>
               ) : (

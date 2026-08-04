@@ -3,88 +3,67 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "../../../lib/prisma";
+import { rateLimit, getClientIp } from "../../../lib/rate-limit";
+import { isEmail, isNonEmptyString } from "../../../lib/validation";
+import { badRequest, serverError } from "../../../lib/http";
 
+// Endpoint publik (by design): siapa pun boleh daftar.
+// Role otomatis EMPLOYEE (default schema) — user biasa tidak bisa
+// mendaftar sebagai ADMIN/HR/MANAGER.
 export async function POST(request: Request) {
+  // Rate limit sederhana: maks 10 request per menit per IP.
+  if (!rateLimit(`register:${getClientIp(request.headers)}`, 10, 60_000)) {
+    return NextResponse.json(
+      { message: "Too many requests, coba lagi nanti" },
+      { status: 429 },
+    );
+  }
+
   try {
-    // =========================
-    // 1. Ambil data dari body request
-    // =========================
     const body = await request.json();
 
     const { name, email, password } = body;
 
-    console.log("BODY:", body);
-
-    // =========================
-    // 2. Validasi input
-    // Pastikan seluruh field wajib terisi
-    // =========================
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        {
-          message: "All fields are required",
-        },
-        {
-          status: 400,
-        },
-      );
+    // Validasi input
+    if (!isNonEmptyString(name)) {
+      return badRequest("Name wajib diisi");
     }
 
-    console.log({
-      name,
-      email,
-      password,
-    });
+    if (!isEmail(email)) {
+      return badRequest("Email tidak valid");
+    }
 
-    // =========================
-    // 3. Cek apakah email sudah terdaftar
-    // Karena field email bersifat unique
-    // =========================
+    if (!isNonEmptyString(password) || password.length < 8) {
+      return badRequest("Password minimal 8 karakter");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Cek apakah email sudah terdaftar
     const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-      },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        {
-          message: "Email already exists",
-        },
-        {
-          status: 400,
-        },
-      );
+      return badRequest("Email already exists");
     }
 
-    // =========================
-    // 4. Hash password
-    // Password tidak boleh disimpan
-    // dalam bentuk plain text
-    // =========================
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // =========================
-    // 5. Simpan user baru ke database
-    // Role otomatis menggunakan default
-    // dari schema Prisma (EMPLOYEE)
-    // =========================
+    // Simpan user baru — role diambil dari default schema (EMPLOYEE)
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: normalizedEmail,
         password: hashedPassword,
       },
     });
 
-    // =========================
-    // 6. Kembalikan response sukses
     // Jangan kirim password ke client
-    // =========================
     return NextResponse.json(
       {
         message: "Register success",
-
         user: {
           id: user.id,
           name: user.name,
@@ -92,23 +71,9 @@ export async function POST(request: Request) {
           role: user.role,
         },
       },
-      {
-        status: 201,
-      },
+      { status: 201 },
     );
   } catch (error) {
-    // =========================
-    // 7. Tangani error server
-    // =========================
-    console.log(error);
-
-    return NextResponse.json(
-      {
-        message: "Internal server error",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error);
   }
 }

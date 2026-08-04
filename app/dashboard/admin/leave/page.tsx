@@ -1,14 +1,33 @@
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+
+import { authOptions } from "lib/auth";
+import { prisma } from "lib/prisma";
 import LeaveTable from "@/components/leave/LeaveTable";
-import { getLeaves } from "service/leave.service";
 import { LeaveRequest } from "@/types/type.leaverequest";
-type Props = {
-  leaveRequests: LeaveRequest[];
-};
 
 export default async function LeavePage() {
-  const leaves = await getLeaves();
+  // Guard: halaman ini khusus ADMIN/HR/MANAGER (seksi /dashboard/admin dilindungi
+  // layout admin, guard tambahan di sini untuk keamanan berlapis).
+  const session = await getServerSession(authOptions);
 
-  const leaveRequests = leaves.map((leave) => ({
+  if (!session) {
+    redirect("/login");
+  }
+
+  if (session.user.role !== "ADMIN") {
+    redirect("/dashboard/employee");
+  }
+
+  // Server component: akses database langsung, tidak lewat fetch.
+  const leaves = await prisma.leave.findMany({
+    include: {
+      employee: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const leaveRequests: LeaveRequest[] = leaves.map((leave) => ({
     id: leave.id,
     employeeName: leave.employee.name,
     leaveType: leave.leaveType,

@@ -1,67 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+
 import { prisma } from "lib/prisma";
+import { authOptions } from "lib/auth";
+import { unauthorized, serverError } from "../../../lib/http";
 
-// =========================
 // GET USERS WITHOUT EMPLOYEE
-// =========================
-// Digunakan untuk mengambil daftar user
-// yang belum memiliki data employee.
-//
-// Tujuan:
-// - Admin dapat memilih user saat membuat employee.
-// - Mencegah 1 user memiliki lebih dari 1 employee.
-// =========================
+// Digunakan untuk mengambil daftar user yang belum memiliki data employee
+// (Admin/HR memilih user saat membuat employee).
 export async function GET() {
-  try {
-    // =========================
-    // AMBIL DATA USER
-    // =========================
-    // Hanya mengambil user yang:
-    // employee = null
-    //
-    // Artinya user tersebut belum terhubung
-    // dengan tabel Employee.
-    // =========================
-    const users = await prisma.user.findMany({
-      where: {
-        employee: null,
-      },
+  const session = await getServerSession(authOptions);
 
-      // =========================
-      // SELECT FIELD YANG DIBUTUHKAN
-      // =========================
-      // Tidak perlu mengirim password
-      // atau data sensitif lainnya ke frontend.
-      // =========================
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const users = await prisma.user.findMany({
+      where: { employee: null },
+      // Hanya field yang dibutuhkan frontend — password tidak pernah dikirim.
       select: {
         id: true,
         name: true,
         email: true,
       },
+      orderBy: { name: "asc" },
     });
 
-    // =========================
-    // RESPONSE SUKSES
-    // =========================
-    // Mengirim daftar user yang
-    // belum memiliki employee.
-    // =========================
     return NextResponse.json(users);
   } catch (error) {
-    console.log(error);
-
-    // =========================
-    // RESPONSE ERROR
-    // =========================
-    // Terjadi kesalahan saat mengambil data.
-    // =========================
-    return NextResponse.json(
-      {
-        message: "Failed get users",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error, "Failed get users");
   }
 }

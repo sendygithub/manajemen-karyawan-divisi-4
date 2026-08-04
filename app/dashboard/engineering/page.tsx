@@ -41,10 +41,6 @@ export default function EngineeringDashboardPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    fetchEjos();
-  }, []);
-
   async function fetchEjos() {
     try {
       const res = await fetch("/api/ejo");
@@ -56,6 +52,13 @@ export default function EngineeringDashboardPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const run = async () => {
+      await fetchEjos();
+    };
+    run();
+  }, []);
 
   async function handleProses(ejoId: string) {
     setProcessingId(ejoId);

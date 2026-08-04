@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Department } from "@/types/type.department";
 import DepartmentTable from "@/components/department/DepartmentTable";
 import DepartmentDialog from "@/components/department/DepartmentDialog";
 import { createDepartment, getDepartments } from "service/department.service";
@@ -9,7 +10,9 @@ import { createDepartment, getDepartments } from "service/department.service";
 export default function DepartmentsPage() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<
+    (Department & { _count?: { employees: number } })[]
+  >([]);
   const [fetching, setFetching] = useState(true);
 
   const [form, setForm] = useState({
@@ -32,7 +35,10 @@ export default function DepartmentsPage() {
   }
 
   useEffect(() => {
-    loadDepartments();
+    const run = async () => {
+      await loadDepartments();
+    };
+    run();
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -61,12 +67,12 @@ export default function DepartmentsPage() {
 
   // Stats
   const totalEmployees = departments.reduce(
-    (sum, d) => sum + d._count.employees,
+    (sum, d) => sum + (d._count?.employees ?? 0),
     0,
   );
   const largestDept = departments.length
     ? departments.reduce((max, d) =>
-        d._count.employees > max._count.employees ? d : max,
+        (d._count?.employees ?? 0) > (max._count?.employees ?? 0) ? d : max,
       )
     : null;
 
@@ -106,7 +112,7 @@ export default function DepartmentsPage() {
           <p className="text-zinc-400 text-sm">Department Terbesar</p>
           <h2 className="text-xl font-bold mt-2 text-purple-400">
             {largestDept
-              ? `${largestDept.name} (${largestDept._count.employees})`
+              ? `${largestDept.name} (${largestDept._count?.employees ?? 0})`
               : "-"}
           </h2>
         </div>

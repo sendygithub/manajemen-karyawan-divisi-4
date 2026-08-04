@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AttendanceTable from "@/components/attendance/AttendanceTable";
-import { getAllAttendance } from "service/attendance.service";
 import { Attendance } from "@/types/type.attendance";
 
 export default function HRAttendancePage() {
@@ -29,7 +28,10 @@ export default function HRAttendancePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getAllAttendance();
+        // Ambil via API route (auth & role check server-side)
+        const res = await fetch("/api/attendance");
+        if (!res.ok) throw new Error("Failed to fetch attendance");
+        const data = await res.json();
         setAttendanceData(data);
       } catch (error) {
         console.error("Failed to fetch attendance:", error);

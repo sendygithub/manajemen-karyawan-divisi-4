@@ -1,141 +1,71 @@
-// =========================
-// IMPORT DEPENDENCIES
-// =========================
-
-// NextResponse digunakan untuk mengirim response API
 import { NextResponse } from "next/server";
-
-// Prisma Client untuk akses database
-import { prisma } from "../../../lib/prisma";
-
-// Mengambil session user yang sedang login
 import { getServerSession } from "next-auth";
 
-// Konfigurasi NextAuth
+import { prisma } from "../../../lib/prisma";
 import { authOptions } from "lib/auth";
+import { badRequest, notFound, unauthorized, serverError } from "../../../lib/http";
+import { isNonEmptyString, isValidDateInput, parseDate } from "../../../lib/validation";
 
-// =========================
-// CREATE LEAVE REQUEST
-// POST /api/leave
-// =========================
+const LEAVE_TYPES = ["ANNUAL", "SICK", "PERSONAL"];
 
 export async function POST(request: Request) {
   try {
-    // =========================
-    // 1. CEK SESSION LOGIN
-    // =========================
-    // Mengambil data user yang sedang login
     const session = await getServerSession(authOptions);
 
-    console.log("SESSION:", session);
-
-    // Jika user belum login maka request ditolak
     if (!session?.user?.id) {
-      return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
+      return unauthorized();
     }
 
-    // =========================
-    // 2. CARI DATA EMPLOYEE
-    // =========================
-    // Mencari employee berdasarkan user yang login
+    // Cari data employee milik user yang login
     const employee = await prisma.employee.findUnique({
-      where: {
-        userId: session.user.id,
-      },
+      where: { userId: session.user.id },
     });
 
-    // Jika employee tidak ditemukan
-    // berarti user belum terhubung ke data employee
     if (!employee) {
-      return NextResponse.json(
-        {
-          message: "Employee data not found",
-        },
-        {
-          status: 404,
-        },
-      );
+      return notFound("Employee data not found");
     }
 
-    // =========================
-    // 3. AMBIL DATA REQUEST
-    // =========================
     const body = await request.json();
-
     const { leaveType, startDate, endDate, reason } = body;
 
-    // =========================
-    // 4. VALIDASI INPUT
-    // =========================
-    // Semua field wajib diisi sebelum data disimpan
-    if (!leaveType || !startDate || !endDate || !reason) {
-      return NextResponse.json(
-        {
-          message: "All fields are required",
-        },
-        {
-          status: 400,
-        },
-      );
+    // Validasi input
+    if (!LEAVE_TYPES.includes(leaveType)) {
+      return badRequest("leaveType tidak valid");
     }
 
-    // =========================
-    // 5. SIMPAN DATA CUTI
-    // =========================
-    // EmployeeId diambil otomatis dari user login
-    // sehingga employee tidak bisa mengajukan cuti
-    // atas nama employee lain
+    if (!isValidDateInput(startDate) || !isValidDateInput(endDate)) {
+      return badRequest("Tanggal tidak valid");
+    }
+
+    if (!isNonEmptyString(reason)) {
+      return badRequest("Reason wajib diisi");
+    }
+
+    const start = parseDate(startDate)!;
+    const end = parseDate(endDate)!;
+
+    if (end < start) {
+      return badRequest("Tanggal selesai tidak boleh sebelum tanggal mulai");
+    }
+
+    // employeeId diambil otomatis dari user login — tidak bisa mengajukan
+    // cuti atas nama karyawan lain.
     const leave = await prisma.leave.create({
       data: {
         leaveType,
-
-        startDate: new Date(startDate),
-
-        endDate: new Date(endDate),
-
-        reason,
-
+        startDate: start,
+        endDate: end,
+        reason: reason.trim(),
         employeeId: employee.id,
       },
     });
 
-    // =========================
-    // 6. RESPONSE BERHASIL
-    // =========================
     return NextResponse.json(
-      {
-        message: "Leave request created",
-        data: leave,
-      },
-      {
-        status: 201,
-      },
+      { message: "Leave request created", data: leave },
+      { status: 201 },
     );
-  } catch (error: any) {
-    // =========================
-    // ERROR HANDLING
-    // =========================
-    console.log(error);
-
-    return NextResponse.json(
-      {
-        message: "Internal Server Error",
-
-        error: error.message,
-
-        prisma_code: error.code,
-      },
-      {
-        status: 500,
-      },
-    );
+  } catch (error) {
+    return serverError(error);
   }
 }
 
@@ -144,10 +74,10 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
-    // Jika role ADMIN, HR, atau MANAGER, tampilkan semua data leave
+    // ADMIN/HR/MANAGER melihat semua pengajuan
     if (
       session.user.role === "ADMIN" ||
       session.user.role === "HR" ||
@@ -156,46 +86,31 @@ export async function GET() {
       const leaves = await prisma.leave.findMany({
         include: {
           employee: {
-            select: {
-              name: true,
-            },
+            select: { name: true },
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       });
 
       return NextResponse.json(leaves);
     }
 
-    // Jika role EMPLOYEE, tampilkan hanya data leave miliknya sendiri
+    // EMPLOYEE hanya melihat pengajuan miliknya sendiri
     const employee = await prisma.employee.findUnique({
-      where: {
-        userId: session.user.id,
-      },
+      where: { userId: session.user.id },
     });
 
     if (!employee) {
-      return NextResponse.json(
-        { message: "Employee not found" },
-        { status: 404 },
-      );
+      return notFound("Employee not found");
     }
 
     const leaves = await prisma.leave.findMany({
-      where: {
-        employeeId: employee.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { employeeId: employee.id },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(leaves);
   } catch (error) {
-    console.log(error);
-
-    return NextResponse.json({ message: "Server Error" }, { status: 500 });
+    return serverError(error, "Server Error");
   }
 }

@@ -1,33 +1,31 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "lib/auth";
 import { prisma } from "../../../../lib/prisma";
+import { badRequest, notFound, unauthorized, serverError } from "../../../../lib/http";
 
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const employee = await prisma.employee.findUnique({
-      where: {
-        userId: session.user.id,
-      },
+      where: { userId: session.user.id },
     });
 
     if (!employee) {
-      return NextResponse.json(
-        { message: "Employee not found" },
-        { status: 404 },
-      );
+      return notFound("Employee not found");
     }
 
-    const today = new Date();
-
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
+    // Cegah check-in ganda di hari yang sama
     const existing = await prisma.attendance.findFirst({
       where: {
         employeeId: employee.id,
@@ -36,21 +34,14 @@ export async function POST() {
     });
 
     if (existing) {
-      return NextResponse.json(
-        {
-          message: "Already checked in today",
-        },
-        {
-          status: 400,
-        },
-      );
+      return badRequest("Already checked in today");
     }
 
     const attendance = await prisma.attendance.create({
       data: {
         employeeId: employee.id,
         date: today,
-        checkIn: new Date(),
+        checkIn: now,
       },
     });
 
@@ -59,15 +50,6 @@ export async function POST() {
       data: attendance,
     });
   } catch (error) {
-    console.log(error);
-
-    return NextResponse.json(
-      {
-        message: "Server Error",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error, "Server Error");
   }
 }

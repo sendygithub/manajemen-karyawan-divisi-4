@@ -78,8 +78,10 @@ export default function EmployeeTable({ employees: initialEmployees }: Props) {
       await deleteEmployee(id);
       toast.success("Employee berhasil dihapus!");
       fetchEmployees();
-    } catch (error: any) {
-      toast.error(error.message || "Gagal menghapus employee");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Gagal menghapus employee",
+      );
     }
   }
 
@@ -101,8 +103,10 @@ export default function EmployeeTable({ employees: initialEmployees }: Props) {
       toast.success("Employee berhasil diupdate!");
       setEditModal({ open: false, employee: null });
       fetchEmployees();
-    } catch (error: any) {
-      toast.error(error.message || "Gagal mengupdate employee");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengupdate employee",
+      );
     }
   }
 

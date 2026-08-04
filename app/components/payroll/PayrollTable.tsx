@@ -200,7 +200,10 @@ export default function PayrollTable({
               value={currentFilter.status ?? ""}
               onChange={(e) =>
                 router.push(
-                  buildHref({ status: e.target.value as any, page: 1 }),
+                  buildHref({
+                    status: e.target.value as PayrollFilter["status"],
+                    page: 1,
+                  }),
                 )
               }
               className="rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:outline-none focus:border-white/30"

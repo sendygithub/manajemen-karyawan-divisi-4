@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Gender, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -347,7 +347,7 @@ async function main() {
         name: emp.name,
         position: emp.position,
         phone: emp.phone,
-        gender: emp.gender as any,
+        gender: emp.gender as Gender,
         joinDate: emp.joinDate,
         bankName: emp.bankName,
         bankAccount: emp.bankAccount,

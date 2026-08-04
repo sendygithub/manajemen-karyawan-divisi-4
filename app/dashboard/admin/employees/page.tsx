@@ -12,7 +12,9 @@ import { User } from "@/types/type.employee";
 export default function EmployeesPage() {
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<
+    React.ComponentProps<typeof EmployeeTable>["employees"]
+  >([]);
   const [form, setForm] = useState({
     userId: "",
     name: "",
@@ -31,7 +33,10 @@ export default function EmployeesPage() {
   }
 
   useEffect(() => {
-    fetchEmployees();
+    const run = async () => {
+      await fetchEmployees();
+    };
+    run();
   }, []);
 
   useEffect(() => {

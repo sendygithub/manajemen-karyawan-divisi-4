@@ -1,123 +1,74 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { getServerSession } from "next-auth";
 
-// =========================
-// CREATE DEPARTMENT
-// Endpoint untuk membuat data department baru
-// Method: POST
-// =========================
+import { prisma } from "../../../lib/prisma";
+import { authOptions } from "lib/auth";
+import { badRequest, unauthorized, serverError } from "../../../lib/http";
+import { isNonEmptyString } from "../../../lib/validation";
+
+const STAFF_ROLES = ["ADMIN", "HR"];
+
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (!STAFF_ROLES.includes(session.user.role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
-    // =========================
-    // AMBIL DATA DARI REQUEST BODY
-    // Data dikirim dari form frontend
-    // =========================
     const body = await request.json();
     const { name, jobdesk, plant } = body;
 
-    // =========================
-    // VALIDASI INPUT
-    // Mencegah data kosong tersimpan ke database
-    // =========================
-    if (!name || !jobdesk || !plant) {
-      return NextResponse.json(
-        {
-          message: "Semua field (name, jobdesk, plant) wajib diisi.",
-        },
-        {
-          status: 400,
-        },
-      );
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(jobdesk) ||
+      !isNonEmptyString(plant)
+    ) {
+      return badRequest("Semua field (name, jobdesk, plant) wajib diisi.");
     }
 
-    // =========================
-    // SIMPAN DATA DEPARTMENT
-    // Prisma akan membuat record baru
-    // pada tabel Department
-    // =========================
     const newDepartment = await prisma.department.create({
       data: {
-        name,
-        jobdesk,
-        plant,
+        name: name.trim(),
+        jobdesk: jobdesk.trim(),
+        plant: plant.trim(),
       },
     });
 
-    // =========================
-    // RESPONSE BERHASIL
-    // Mengembalikan data department
-    // yang baru dibuat
-    // =========================
     return NextResponse.json(
-      {
-        message: "Department berhasil dibuat",
-        data: newDepartment,
-      },
-      {
-        status: 201,
-      },
+      { message: "Department berhasil dibuat", data: newDepartment },
+      { status: 201 },
     );
   } catch (error) {
-    console.error("Error creating department:", error);
-
-    // =========================
-    // ERROR HANDLER
-    // Menangani error yang terjadi
-    // selama proses create department
-    // =========================
-    return NextResponse.json(
-      {
-        message: "Terjadi kesalahan pada server.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error, "Terjadi kesalahan pada server.");
   }
 }
 
-// =========================
-// GET ALL DEPARTMENTS
-// Mengambil seluruh data department
-// Method: GET
-// =========================
 export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (!["ADMIN", "HR", "MANAGER"].includes(session.user.role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
-    // =========================
-    // AMBIL DATA DEPARTMENT
-    // Diurutkan berdasarkan data terbaru
-    // =========================
     const departments = await prisma.department.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       include: {
-        _count: {
-          select: { employees: true },
-        },
+        _count: { select: { employees: true } },
       },
     });
 
-    // =========================
-    // RESPONSE BERHASIL
-    // Mengirim seluruh data department
-    // ke frontend
-    // =========================
     return NextResponse.json(departments);
   } catch (error) {
-    console.log(error);
-
-    // =========================
-    // ERROR HANDLER
-    // Menangani kegagalan query database
-    // =========================
-    return NextResponse.json(
-      {
-        message: "Internal server error",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error, "Internal server error");
   }
 }

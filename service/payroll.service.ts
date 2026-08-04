@@ -7,7 +7,10 @@ import {
   getPayrollSummary,
   getDepartments,
   getAllEmployees,
+  payrollInclude,
 } from "repository/payroll.repository";
+import type { PayrollWhereInput, PayrollOrderBy } from "repository/payroll.repository";
+import { Prisma } from "@prisma/client";
 import {
   validatePayrollForm,
   validatePayrollFilter,
@@ -22,7 +25,10 @@ import type {
   PaginatedResult,
 } from "@/types/type.payroll";
 
-function mapPayrollToResponse(data: any): Payroll {
+// Bentuk record payroll hasil query repository (termasuk relasi employee+department)
+type PayrollRecord = Prisma.PayrollGetPayload<{ include: typeof payrollInclude }>;
+
+function mapPayrollToResponse(data: PayrollRecord): Payroll {
   return {
     id: data.id,
     employeeId: data.employeeId,
@@ -44,7 +50,7 @@ function mapPayrollToResponse(data: any): Payroll {
   };
 }
 
-function mapToPayrollDetail(data: any): PayrollDetail {
+function mapToPayrollDetail(data: PayrollRecord): PayrollDetail {
   const base = mapPayrollToResponse(data);
   return {
     ...base,
@@ -75,7 +81,7 @@ export async function getPayrolls(
     throw new Error(validation.errors.join(", "));
   }
 
-  const where: any = {};
+  const where: PayrollWhereInput = {};
 
   if (filter.month) where.month = filter.month;
   if (filter.year) where.year = filter.year;
@@ -108,7 +114,7 @@ export async function getPayrolls(
     "updatedAt",
   ];
 
-  let orderBy: any = { createdAt: "desc" };
+  let orderBy: PayrollOrderBy = { createdAt: "desc" };
   if (filter.sortBy && allowedSortFields.includes(filter.sortBy)) {
     orderBy = { [filter.sortBy]: filter.sortOrder ?? "desc" };
   }
@@ -172,7 +178,10 @@ export async function updatePayrollEntry(
   id: string,
   updateData: PayrollUpdateData,
 ): Promise<Payroll> {
-  const prismaData: any = {};
+  // Hanya field finansial yang boleh diubah via form edit.
+  // totalSalary dihitung ulang di server; status & paidAt hanya
+  // diubah lewat markAsPaid / markAsPending (action khusus).
+  const prismaData: Prisma.PayrollUpdateInput = {};
 
   if (updateData.baseSalary !== undefined)
     prismaData.baseSalary = updateData.baseSalary;
@@ -181,11 +190,30 @@ export async function updatePayrollEntry(
   if (updateData.deduction !== undefined)
     prismaData.deduction = updateData.deduction;
   if (updateData.bonus !== undefined) prismaData.bonus = updateData.bonus;
-  if (updateData.totalSalary !== undefined)
-    prismaData.totalSalary = updateData.totalSalary;
-  if (updateData.status !== undefined) prismaData.status = updateData.status;
-  if (updateData.paidAt !== undefined) prismaData.paidAt = updateData.paidAt;
   if (updateData.notes !== undefined) prismaData.notes = updateData.notes;
+
+  // Hitung ulang totalSalary dari komponennya — jangan percaya input client.
+  const nextBase = updateData.baseSalary;
+  const nextAllowance = updateData.allowance;
+  const nextDeduction = updateData.deduction;
+  const nextBonus = updateData.bonus;
+
+  if (
+    nextBase !== undefined ||
+    nextAllowance !== undefined ||
+    nextDeduction !== undefined ||
+    nextBonus !== undefined
+  ) {
+    const current = await findPayrollById(id);
+    if (!current) throw new Error("Payroll not found");
+
+    const base = nextBase ?? current.baseSalary;
+    const allowance = nextAllowance ?? current.allowance;
+    const bonus = nextBonus ?? current.bonus;
+    const deduction = nextDeduction ?? current.deduction;
+
+    prismaData.totalSalary = base + allowance + bonus - deduction;
+  }
 
   const data = await updatePayroll(id, prismaData);
   return mapPayrollToResponse(data);

@@ -1,107 +1,87 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { getSession } from "next-auth/react";
 
-const QUICK_LOGIN = [
-  {
-    label: "Admin",
-    email: "admin@company.com",
-    password: "admin123",
-    role: "ADMIN",
-  },
-  { label: "HR", email: "hr@company.com", password: "hr123", role: "HR" },
-  {
-    label: "Manager",
-    email: "manager@company.com",
-    password: "manager123",
-    role: "MANAGER",
-  },
-  {
-    label: "Engineering",
-    email: "engineering@company.com",
-    password: "engineering123",
-    role: "ENGINEERING",
-  },
-  {
-    label: "Employee",
-    email: "ahmad@company.com",
-    password: "employee123",
-    role: "EMPLOYEE",
-  },
-];
-
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Tujuan awal sebelum di-redirect ke login (dari proxy/middleware).
+  const callbackUrl = searchParams.get("callbackUrl");
+
+  function redirectAfterLogin(userEmail?: string | null, role?: string) {
+    // Prioritas 1: callbackUrl yang aman (path internal, bukan /login).
+    if (
+      callbackUrl &&
+      callbackUrl.startsWith("/") &&
+      !callbackUrl.startsWith("/login") &&
+      !callbackUrl.startsWith("/register")
+    ) {
+      router.push(callbackUrl);
+      return;
+    }
+
+    // Prioritas 2: halaman khusus engineering.
+    if (userEmail === "engineering@company.com") {
+      router.push("/dashboard/engineering");
+      return;
+    }
+
+    // Prioritas 3: dashboard sesuai role.
+    switch (role) {
+      case "ADMIN":
+        router.push("/dashboard/admin");
+        break;
+      case "HR":
+        router.push("/dashboard/hr");
+        break;
+      case "MANAGER":
+        router.push("/dashboard/manager");
+        break;
+      default:
+        router.push("/dashboard/employee");
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      alert("Invalid credentials");
-
+    if (!email || !password) {
+      alert("Email dan password wajib diisi");
       return;
     }
 
-    const session = await getSession();
+    setLoading(true);
 
-    if (session?.user.email === "engineering@company.com") {
-      router.push("/dashboard/engineering");
-    } else if (session?.user.role === "ADMIN") {
-      router.push("/dashboard/admin");
-    } else if (session?.user.role === "HR") {
-      router.push("/dashboard/hr");
-    } else if (session?.user.role === "MANAGER") {
-      router.push("/dashboard/manager");
-    } else if (session?.user.role === "EMPLOYEE") {
-      router.push("/dashboard/employee");
-    }
-  }
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-  async function handleQuickLogin(
-    email: string,
-    password: string,
-    label: string,
-  ) {
-    setLoading(label);
+      if (result?.error) {
+        alert("Invalid credentials");
+        return;
+      }
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+      // Ambil session baru untuk tahu role & email.
+      const { getSession } = await import("next-auth/react");
+      const session = await getSession();
 
-    if (result?.error) {
-      alert("Quick login failed");
-      setLoading(null);
-      return;
-    }
-
-    const session = await getSession();
-
-    if (session?.user.email === "engineering@company.com") {
-      router.push("/dashboard/engineering");
-    } else if (session?.user.role === "ADMIN") {
-      router.push("/dashboard/admin");
-    } else if (session?.user.role === "HR") {
-      router.push("/dashboard/hr");
-    } else if (session?.user.role === "MANAGER") {
-      router.push("/dashboard/manager");
-    } else if (session?.user.role === "EMPLOYEE") {
-      router.push("/dashboard/employee");
+      redirectAfterLogin(
+        session?.user?.email,
+        session?.user?.role as string,
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -156,6 +136,7 @@ export default function LoginPage() {
                 "
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
             </div>
 
@@ -183,30 +164,14 @@ export default function LoginPage() {
                   focus:border-white/20
                   focus:bg-white/[0.05]
                 "
+                autoComplete="current-password"
               />
-            </div>
-
-            {/* OPTIONS */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-zinc-500">
-                <input type="checkbox" />
-                Remember me
-              </label>
-
-              <button
-                type="submit"
-                className="
-                  text-zinc-400
-                  transition
-                  hover:text-white
-                "
-              >
-                Forgot Password?
-              </button>
             </div>
 
             {/* BUTTON */}
             <button
+              type="submit"
+              disabled={loading}
               className="
                 w-full
                 rounded-2xl
@@ -217,83 +182,38 @@ export default function LoginPage() {
                 text-black
                 transition
                 hover:opacity-90
+                disabled:cursor-not-allowed
+                disabled:opacity-60
               "
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          {/* QUICK LOGIN */}
-          <div className="mt-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                Quick Login
-              </span>
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {QUICK_LOGIN.map((item) => (
-                <button
-                  key={item.role}
-                  type="button"
-                  disabled={loading === item.label}
-                  onClick={() =>
-                    handleQuickLogin(item.email, item.password, item.label)
-                  }
-                  className="
-                    rounded-xl
-                    border
-                    border-white/10
-                    bg-white/[0.03]
-                    px-3
-                    py-2.5
-                    text-xs
-                    font-medium
-                    text-zinc-400
-                    transition
-                    hover:border-white/20
-                    hover:bg-white/[0.06]
-                    hover:text-white
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                  "
-                >
-                  {loading === item.label ? (
-                    <span className="flex items-center justify-center gap-1.5">
-                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent" />
-                      Signing in...
-                    </span>
-                  ) : (
-                    <>
-                      <span className="block text-[10px] uppercase tracking-wider text-zinc-600">
-                        {item.role}
-                      </span>
-                      <span className="block">{item.label}</span>
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* FOOTER */}
-          <p className="mt-6 text-center text-sm text-zinc-500">
-            Don't have an account?{" "}
-            <Link
-              href="/register"
-              className="
-                text-white
-                transition
-                hover:text-zinc-300
-              "
-            >
-              Create account
+          {/* REGISTER LINK */}
+          <div className="mt-6 text-center text-sm text-zinc-500">
+            Belum punya akun?{" "}
+            <Link href="/register" className="text-zinc-300 hover:text-white">
+              Daftar di sini
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  // useSearchParams() wajib dibungkus Suspense agar halaman bisa di-prerender.
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#09090b] text-zinc-500">
+          Memuat...
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

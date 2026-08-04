@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+
 import { authOptions } from "../../../../lib/auth";
+import { badRequest, unauthorized, serverError } from "../../../../lib/http";
 import { updateEjoStatus } from "service/ejo.service";
+
+const EJO_STATUSES = ["MENUNGGU_KONFIRMASI", "DIPROSES", "SELESAI"];
 
 export async function PATCH(
   request: Request,
@@ -9,28 +13,27 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorized();
+    }
+
+    // Hanya ADMIN/HR/MANAGER yang boleh mengubah status EJO
+    if (!["ADMIN", "HR", "MANAGER"].includes(session.user.role)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;
     const body = await request.json();
     const { status } = body;
 
-    if (!status) {
-      return NextResponse.json(
-        { error: "Status is required" },
-        { status: 400 },
-      );
+    if (!EJO_STATUSES.includes(status)) {
+      return badRequest("Status tidak valid");
     }
 
     const ejo = await updateEjoStatus(id, status);
     return NextResponse.json(ejo);
   } catch (error) {
-    console.error("Error updating ejo status:", error);
-    return NextResponse.json(
-      { error: "Failed to update ejo status" },
-      { status: 500 },
-    );
+    return serverError(error, "Failed to update ejo status");
   }
 }

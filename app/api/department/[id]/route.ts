@@ -1,29 +1,47 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { getServerSession } from "next-auth";
 
-// =========================
-// UPDATE DEPARTMENT
-// PUT /api/department/[id]
-// =========================
+import { prisma } from "../../../../lib/prisma";
+import { authOptions } from "lib/auth";
+import { badRequest, unauthorized, serverError } from "../../../../lib/http";
+import { isNonEmptyString } from "../../../../lib/validation";
+
+const STAFF_ROLES = ["ADMIN", "HR"];
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (!STAFF_ROLES.includes(session.user.role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
     const { name, jobdesk, plant } = body;
 
-    if (!name || !jobdesk || !plant) {
-      return NextResponse.json(
-        { message: "Semua field (name, jobdesk, plant) wajib diisi." },
-        { status: 400 },
-      );
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(jobdesk) ||
+      !isNonEmptyString(plant)
+    ) {
+      return badRequest("Semua field (name, jobdesk, plant) wajib diisi.");
     }
 
     const updated = await prisma.department.update({
       where: { id },
-      data: { name, jobdesk, plant },
+      data: {
+        name: name.trim(),
+        jobdesk: jobdesk.trim(),
+        plant: plant.trim(),
+      },
     });
 
     return NextResponse.json({
@@ -31,26 +49,28 @@ export async function PUT(
       data: updated,
     });
   } catch (error) {
-    console.error("Error updating department:", error);
-    return NextResponse.json(
-      { message: "Terjadi kesalahan pada server." },
-      { status: 500 },
-    );
+    return serverError(error, "Terjadi kesalahan pada server.");
   }
 }
 
-// =========================
-// DELETE DEPARTMENT
-// DELETE /api/department/[id]
-// =========================
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (!STAFF_ROLES.includes(session.user.role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const { id } = await params;
 
-    // Check if department has employees
+    // Cegah hapus department yang masih punya karyawan
     const employeeCount = await prisma.employee.count({
       where: { departmentId: id },
     });
@@ -64,18 +84,10 @@ export async function DELETE(
       );
     }
 
-    await prisma.department.delete({
-      where: { id },
-    });
+    await prisma.department.delete({ where: { id } });
 
-    return NextResponse.json({
-      message: "Department berhasil dihapus",
-    });
+    return NextResponse.json({ message: "Department berhasil dihapus" });
   } catch (error) {
-    console.error("Error deleting department:", error);
-    return NextResponse.json(
-      { message: "Terjadi kesalahan pada server." },
-      { status: 500 },
-    );
+    return serverError(error, "Terjadi kesalahan pada server.");
   }
 }

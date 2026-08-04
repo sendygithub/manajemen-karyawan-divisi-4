@@ -24,29 +24,42 @@ export default function ManagerLeavePage() {
     }
   }, [session, status, router]);
 
-  useEffect(() => {
-    fetchLeaves();
-  }, []);
-
   async function fetchLeaves() {
     try {
       const res = await fetch("/api/leave");
       const data = await res.json();
       // Transform data to match LeaveTable expected format
-      const transformed = data.map((leave: any) => ({
-        id: leave.id,
-        employeeName: leave.employee?.name || "Unknown",
-        leaveType: leave.leaveType,
-        startDate: new Date(leave.startDate).toISOString().split("T")[0],
-        endDate: new Date(leave.endDate).toISOString().split("T")[0],
-        reason: leave.reason,
-        status: leave.status,
-      }));
+      const transformed = data.map(
+        (leave: {
+          id: string;
+          leaveType: string;
+          startDate: string;
+          endDate: string;
+          reason: string;
+          status: string;
+          employee?: { name: string } | null;
+        }) => ({
+          id: leave.id,
+          employeeName: leave.employee?.name || "Unknown",
+          leaveType: leave.leaveType,
+          startDate: new Date(leave.startDate).toISOString().split("T")[0],
+          endDate: new Date(leave.endDate).toISOString().split("T")[0],
+          reason: leave.reason,
+          status: leave.status,
+        }),
+      );
       setLeaves(transformed);
     } catch (error) {
       console.error("Failed to fetch leaves:", error);
     }
   }
+
+  useEffect(() => {
+    const run = async () => {
+      await fetchLeaves();
+    };
+    run();
+  }, []);
 
   if (status === "loading") {
     return <div className="text-zinc-400">Loading...</div>;

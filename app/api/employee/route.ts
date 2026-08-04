@@ -1,203 +1,118 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
 import { prisma } from "../../../lib/prisma";
+import { authOptions } from "lib/auth";
+import { badRequest, notFound, unauthorized, serverError } from "../../../lib/http";
+import { isNonEmptyString } from "../../../lib/validation";
+
+const MANAGER_ROLES = ["ADMIN", "HR", "MANAGER"];
+
+// Select user yang AMAN — password tidak pernah ikut terkirim.
+const userSafeSelect = {
+  select: { id: true, name: true, email: true, role: true },
+};
 
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
-    // =========================
-    // MENGAMBIL DATA DARI REQUEST BODY
-    // Data dikirim dari form Add Employee
-    // =========================
     const body = await request.json();
 
     const { name, position, departmentId, userId } = body;
 
-    // =========================
-    // VALIDASI INPUT
-    // Semua field wajib diisi karena
-    // Employee harus terhubung ke User
-    // dan Department
-    // =========================
-    if (!name || !position || !departmentId || !userId) {
-      return NextResponse.json(
-        {
-          message: "Name, Position, Department dan User wajib diisi",
-        },
-        {
-          status: 400,
-        },
-      );
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(position) ||
+      !isNonEmptyString(departmentId) ||
+      !isNonEmptyString(userId)
+    ) {
+      return badRequest("Name, Position, Department dan User wajib diisi");
     }
 
-    // =========================
-    // CEK USER
-    // Memastikan user yang dipilih
-    // benar-benar ada di database
-    // =========================
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+    // Cek user benar-benar ada
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      return NextResponse.json(
-        {
-          message: "User tidak ditemukan",
-        },
-        {
-          status: 404,
-        },
-      );
+      return notFound("User tidak ditemukan");
     }
 
-    // =========================
-    // CEK DEPARTMENT
-    // Memastikan department yang dipilih
-    // tersedia di database
-    // =========================
+    // Cek department tersedia
     const department = await prisma.department.findUnique({
-      where: {
-        id: departmentId,
-      },
+      where: { id: departmentId },
     });
 
     if (!department) {
-      return NextResponse.json(
-        {
-          message: "Department tidak ditemukan",
-        },
-        {
-          status: 404,
-        },
-      );
+      return notFound("Department tidak ditemukan");
     }
 
-    // =========================
-    // CEK RELASI USER - EMPLOYEE
-    // Karena pada schema:
-    // userId bersifat @unique
-    // maka satu user hanya boleh
-    // memiliki satu data employee
-    // =========================
+    // Satu user hanya boleh punya satu employee
     const existingEmployee = await prisma.employee.findUnique({
-      where: {
-        userId,
-      },
+      where: { userId },
     });
 
     if (existingEmployee) {
-      return NextResponse.json(
-        {
-          message: "User sudah memiliki employee",
-        },
-        {
-          status: 400,
-        },
-      );
+      return badRequest("User sudah memiliki employee");
     }
 
-    // =========================
-    // MEMBUAT DATA EMPLOYEE BARU
-    // Sekaligus menghubungkan
-    // Employee dengan User
-    // dan Department
-    // =========================
     const employee = await prisma.employee.create({
       data: {
-        name,
-        position,
+        name: name.trim(),
+        position: position.trim(),
         departmentId,
         userId,
       },
       include: {
         department: true,
-        user: true,
+        user: userSafeSelect,
       },
     });
 
-    // =========================
-    // RESPONSE BERHASIL
-    // Mengembalikan data employee
-    // yang baru dibuat
-    // =========================
     return NextResponse.json(
-      {
-        message: "Employee berhasil dibuat",
-        data: employee,
-      },
-      {
-        status: 201,
-      },
+      { message: "Employee berhasil dibuat", data: employee },
+      { status: 201 },
     );
-  } catch (error: any) {
-    // =========================
-    // ERROR HANDLER
-    // Menangkap seluruh error
-    // yang terjadi selama proses
-    // =========================
-    console.log(error);
-
-    return NextResponse.json(
-      {
-        message: "Internal Server Error",
-        error: error.message,
-      },
-      {
-        status: 500,
-      },
-    );
+  } catch (error) {
+    return serverError(error);
   }
 }
 
 export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  if (!MANAGER_ROLES.includes(session.user.role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const departmentId = searchParams.get("departmentId");
 
-    // =========================
-    // MENGAMBIL SELURUH DATA EMPLOYEE
-    // Beserta data User dan Department
-    // yang berelasi
-    // =========================
     const where = departmentId ? { departmentId } : {};
 
     const employees = await prisma.employee.findMany({
       where,
       include: {
         department: true,
-        user: true,
+        user: userSafeSelect,
       },
-
-      // =========================
-      // MENAMPILKAN DATA TERBARU
-      // DI URUTKAN BERDASARKAN
-      // WAKTU PEMBUATAN
-      // =========================
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
-    // =========================
-    // RESPONSE BERHASIL
-    // Mengirim daftar employee
-    // ke frontend
-    // =========================
     return NextResponse.json(employees);
   } catch (error) {
-    // =========================
-    // ERROR HANDLER
-    // Jika gagal mengambil data
-    // employee dari database
-    // =========================
-    return NextResponse.json(
-      {
-        message: "Failed get employees",
-      },
-      {
-        status: 500,
-      },
-    );
+    return serverError(error, "Failed get employees");
   }
 }

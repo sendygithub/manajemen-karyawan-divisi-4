@@ -1,12 +1,30 @@
 "use server";
 
-import { prisma } from "lib/prisma";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
+import { authOptions } from "../lib/auth";
+import { prisma } from "../lib/prisma";
+
+// Approve/reject cuti hanya boleh dilakukan ADMIN/HR/MANAGER.
 export async function updateLeaveStatus(
   id: string,
   status: "APPROVED" | "REJECTED",
 ) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!["ADMIN", "HR", "MANAGER"].includes(session.user.role)) {
+    throw new Error("Forbidden");
+  }
+
+  if (status !== "APPROVED" && status !== "REJECTED") {
+    throw new Error("Status tidak valid");
+  }
+
   await prisma.leave.update({
     where: { id },
     data: { status },
