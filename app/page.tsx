@@ -26,9 +26,6 @@ export default function HomePage() {
       {/* Bagian Hero — Sambutan & Foto Tim */}
       <HeroSection />
 
-      {/* Bagian Departemen — Kartu Statistik ABC, ASQ, ASM */}
-      <DepartmentCards />
-
       {/* Footer */}
       <Footer />
     </main>
