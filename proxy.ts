@@ -33,10 +33,11 @@ export async function proxy(request: NextRequest) {
   });
 
   const isDashboard = pathname.startsWith("/dashboard");
+  const isTrading = pathname === "/trading" || pathname.startsWith("/trading/");
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
   // Belum login → lempar ke halaman login (simpan tujuan awal).
-  if (isDashboard && !token) {
+  if ((isDashboard || isTrading) && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
@@ -44,6 +45,10 @@ export async function proxy(request: NextRequest) {
 
   // Sudah login, tapi buka /login atau /register → arahkan ke dashboard sesuai role.
   if (isAuthPage && token) {
+    // User trading → langsung ke terminal.
+    if (token.email === "trading@mygajah.com") {
+      return NextResponse.redirect(new URL("/trading", request.url));
+    }
     const role = (token.role as string) ?? "EMPLOYEE";
     return NextResponse.redirect(
       new URL(ROLE_HOME[role] ?? "/dashboard/employee", request.url),
@@ -72,5 +77,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/trading/:path*", "/login", "/register"],
 };

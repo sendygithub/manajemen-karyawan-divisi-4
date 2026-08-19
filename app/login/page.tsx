@@ -34,6 +34,12 @@ function LoginPageContent() {
       return;
     }
 
+    // Prioritas 2.5: user trading → langsung ke terminal /trading.
+    if (userEmail === "trading@mygajah.com") {
+      router.push("/trading");
+      return;
+    }
+
     // Prioritas 3: dashboard sesuai role.
     switch (role) {
       case "ADMIN":

@@ -15,6 +15,10 @@ model User {
   createdAt DateTime  @default(now())
   name      String
   employee  Employee?
+
+  tradingAccount  TradingAccount?
+  tradingPositions TradingPosition[]
+  tradingOrders   TradingOrder[]
 }
 
 model Employee {
@@ -199,4 +203,88 @@ model Laporan {
   updatedAt       DateTime @updatedAt
 
   @@index([employeeId])
+}
+
+// ============================================================
+// PAPER TRADING — modul /trading (data pasar real, eksekusi simulasi)
+// Port dari tradernext.vercel.app oleh Jarvis
+// ============================================================
+
+enum PositionSide {
+  LONG
+  SHORT
+}
+
+enum PositionStatus {
+  OPEN
+  CLOSED
+}
+
+enum OrderType {
+  MARKET
+  LIMIT
+  STOP
+}
+
+enum OrderStatus {
+  PENDING
+  TRIGGERED
+  FILLED
+  CANCELLED
+}
+
+model TradingAccount {
+  id        String   @id
+  userId    String   @unique
+  balance   Float    @default(10000)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TradingPosition {
+  id          String         @id
+  userId      String
+  symbol      String
+  side        PositionSide
+  qty         Float
+  entryPrice  Float
+  leverage    Int            @default(1)
+  slPrice     Float?
+  tpPrice     Float?
+  status      PositionStatus @default(OPEN)
+  openedAt    DateTime       @default(now())
+  closedAt    DateTime?
+  closePrice  Float?
+  realizedPnl Float?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TradingOrder {
+  id             String      @id
+  userId         String
+  symbol         String
+  side           PositionSide
+  type           OrderType
+  qty            Float
+  price          Float?
+  leverage       Int         @default(1)
+  slPrice        Float?
+  tpPrice        Float?
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  filledAt       DateTime?
+  triggeredPrice Float?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

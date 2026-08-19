@@ -190,7 +190,7 @@ export default function HeroSection() {
             className="absolute -bottom-2 left-1/2 -translate-x-1/2 md:left-auto md:right-2 md:translate-x-0 bg-[#0D0C0B] border border-white/10 rounded-xl px-4 py-3 max-w-[240px] shadow-xl"
           >
             <p className="text-xs text-[#D9D6CC] italic leading-relaxed">
-              "{WELCOME_MESSAGE.quote}"
+              &ldquo;{WELCOME_MESSAGE.quote}&rdquo;
             </p>
             <p className="text-[11px] text-[#F5B700] mt-1.5 font-medium">
               — {WELCOME_MESSAGE.author}

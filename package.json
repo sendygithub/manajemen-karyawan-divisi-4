@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "test": "jest"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -16,7 +17,9 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
+    "lightweight-charts": "^5.2.1",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
     "next-auth": "^4.24.14",
@@ -24,17 +27,21 @@
     "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.19.41",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "jest": "^30.4.2",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   }
