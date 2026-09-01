@@ -2,6 +2,7 @@ import { prisma } from "lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "lib/auth";
 import { redirect } from "next/navigation";
+import { Users, UserCheck, Clock, Building2 } from "lucide-react";
 
 export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -9,17 +10,12 @@ export default async function AdminDashboardPage() {
     redirect("/login");
   }
 
-  // ─── REAL DATA FROM DATABASE ───
-
-  // Total Employees
   const totalEmployees = await prisma.employee.count();
 
-  // Employees per department
   const departments = await prisma.department.findMany({
     include: { _count: { select: { employees: true } } },
   });
 
-  // Attendance today
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -32,53 +28,52 @@ export default async function AdminDashboardPage() {
     },
   });
 
-  // Pending leaves
   const pendingLeaves = await prisma.leave.count({
     where: { status: "PENDING" },
   });
 
-  // Recent employees (last 5)
   const recentEmployees = await prisma.employee.findMany({
     take: 5,
     orderBy: { createdAt: "desc" },
     include: { department: true },
   });
 
-  // Recent leave requests (last 5)
   const recentLeaves = await prisma.leave.findMany({
     take: 5,
     orderBy: { createdAt: "desc" },
     include: { employee: true },
   });
 
-  // Recent attendance activity (last 5)
   const recentAttendance = await prisma.attendance.findMany({
     take: 5,
     orderBy: { date: "desc" },
     include: { employee: true },
   });
 
-  // ─── STATS CARDS ───
   const stats = [
     {
       title: "Total Employees",
       value: totalEmployees,
       color: "text-blue-400",
+      icon: <Users size={20} />,
     },
     {
       title: "Attendance Today",
       value: `${attendanceToday} / ${totalEmployees}`,
-      color: "text-green-400",
+      color: "text-emerald-400",
+      icon: <UserCheck size={20} />,
     },
     {
       title: "Pending Leave",
       value: pendingLeaves,
-      color: "text-yellow-400",
+      color: "text-amber-400",
+      icon: <Clock size={20} />,
     },
     {
       title: "Departments",
       value: departments.length,
       color: "text-purple-400",
+      icon: <Building2 size={20} />,
     },
   ];
 
@@ -86,15 +81,15 @@ export default async function AdminDashboardPage() {
     switch (status) {
       case "APPROVED":
       case "PRESENT":
-        return "bg-green-500/20 text-green-400";
+        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
       case "PENDING":
       case "LATE":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-amber-500/15 text-amber-400 border-amber-500/20";
       case "REJECTED":
       case "ABSENT":
-        return "bg-red-500/20 text-red-400";
+        return "bg-red-500/15 text-red-400 border-red-500/20";
       default:
-        return "bg-zinc-500/20 text-zinc-400";
+        return "bg-zinc-500/15 text-zinc-400 border-zinc-500/20";
     }
   }
 
@@ -117,12 +112,18 @@ export default async function AdminDashboardPage() {
         {stats.map((item) => (
           <div
             key={item.title}
-            className="rounded-2xl border border-white/10 bg-white/5 p-5"
+            className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 hover:shadow-xl hover:shadow-black/20"
           >
-            <p className="text-zinc-400 text-sm">{item.title}</p>
-            <h2 className={`text-3xl font-bold mt-3 ${item.color}`}>
-              {item.value}
-            </h2>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <p className="text-zinc-400 text-sm">{item.title}</p>
+                <span className="text-zinc-500">{item.icon}</span>
+              </div>
+              <h2 className={`text-3xl font-bold mt-3 ${item.color}`}>
+                {item.value}
+              </h2>
+            </div>
           </div>
         ))}
       </div>
@@ -132,7 +133,7 @@ export default async function AdminDashboardPage() {
         {departments.map((dept) => (
           <div
             key={dept.id}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.06]"
           >
             <p className="text-zinc-400 text-xs uppercase tracking-wider">
               {dept.name}
@@ -148,32 +149,26 @@ export default async function AdminDashboardPage() {
       {/* MAIN CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* RECENT EMPLOYEES */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold">Recent Employees</h2>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-white/10">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20">
             <table className="w-full">
               <thead className="bg-white/5">
                 <tr className="text-left">
-                  <th className="p-4 text-zinc-400 text-sm font-medium">
-                    Name
-                  </th>
-                  <th className="p-4 text-zinc-400 text-sm font-medium">
-                    Position
-                  </th>
-                  <th className="p-4 text-zinc-400 text-sm font-medium">
-                    Department
-                  </th>
+                  <th className="p-4 text-zinc-400 text-sm font-medium">Name</th>
+                  <th className="p-4 text-zinc-400 text-sm font-medium">Position</th>
+                  <th className="p-4 text-zinc-400 text-sm font-medium">Department</th>
                 </tr>
               </thead>
               <tbody>
                 {recentEmployees.map((employee) => (
-                  <tr key={employee.id} className="border-t border-white/10">
+                  <tr key={employee.id} className="border-t border-white/5 hover:bg-white/[0.03] transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-md">
                           {employee.name.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-medium">{employee.name}</span>
@@ -200,7 +195,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* LEAVE REQUESTS */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold">Leave Requests</h2>
           </div>
@@ -209,7 +204,7 @@ export default async function AdminDashboardPage() {
             {recentLeaves.map((leave) => (
               <div
                 key={leave.id}
-                className="rounded-xl border border-white/10 bg-black/20 p-4"
+                className="rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm transition-all duration-200 hover:bg-white/[0.04]"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -221,7 +216,7 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(leave.status)}`}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(leave.status)}`}
                   >
                     {formatStatus(leave.status)}
                   </span>
@@ -238,7 +233,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* RECENT ACTIVITY */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold">Recent Attendance</h2>
         </div>
@@ -247,7 +242,7 @@ export default async function AdminDashboardPage() {
           {recentAttendance.map((att) => (
             <div
               key={att.id}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4"
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm transition-all duration-200 hover:bg-white/[0.04]"
             >
               <div>
                 <p className="font-medium text-sm">
@@ -271,7 +266,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
               <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(att.status)}`}
+                className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(att.status)}`}
               >
                 {formatStatus(att.status)}
               </span>

@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#09090b] text-white">
+    <div className="flex min-h-screen bg-[radial-gradient(ellipse_at_top_left,_#1a1a2e_0%,_#09090b_60%)] text-white">
       <Sidebar />
 
       <main className="flex-1 overflow-hidden">
